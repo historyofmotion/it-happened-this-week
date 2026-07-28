@@ -88,7 +88,7 @@ The in-app capture surface is **click-first**. Everything you need is visible; n
 
 ```
 ┌──────────────────────────────────────────────────────────────────┐
-│ ● Atlas Migration ③⌥1  ○ Q3 Hiring ②⌥2  ○ Docs ⓪⌥3   [+ New]  │  ← count = notes this week
+│ ● Atlas ❙❙❙ ⌥1   ○ Q3 Hiring ❙❙❙❙̸ ⌥2   ○ Docs ▢ ⌥3   [+ New]      │  ← tally = notes this week
 ├──────────────────────────────────────────────────────────────────┤
 │ Cut over the staging cluster                                     │
 │ Zero downtime; rollback rehearsed twice          ⏎ grows [🎙][Save]│
@@ -120,8 +120,12 @@ Atlas Migration · this week · 3
 
 Each tile carries the number of notes logged against that project **in the current week**. It answers the question you actually have on Thursday afternoon: *which of these have I not written anything about?*
 
-- A non-zero count is quiet — filled pill, muted text. It's reassurance, not information you need to act on.
-- **Zero is styled differently** — dashed outline in the warning color. It's the only actionable state, so it's the only one that draws the eye. Four projects showing `3 2 4 0` should make the `0` the thing you see first.
+The count is drawn as a **tally** — the same mark as the app icon (§17), doing real work rather than decoration. Groups of five: four uprights crossed by a diagonal, remainder as loose uprights.
+
+- A non-zero tally is quiet — muted stroke, accent when the tile is selected. It's reassurance, not something to act on.
+- **Zero is an empty dashed slot** in the warning colour. It's the only actionable state, so it's the only one that draws the eye. Four tiles reading `||| ||||̸ || ▢` should make the empty one the thing you see first.
+- **Past ten it falls back to a numeral.** A tally you have to count is worse than a digit; the notation is only faster while the shape is recognisable at a glance. Ten is two full groups, which is about where that stops.
+- Every badge carries the exact count in `title` and `aria-label` regardless, so the precise number is always one hover — or one screen reader — away.
 - The count is derived, never stored, and updates on every save, delete, and week change.
 - It counts the *current* week only, regardless of what Summarize is looking at — Capture has no concept of other weeks (§3.1).
 
@@ -691,6 +695,13 @@ The `.ico` therefore contains **independently rendered** frames at 16, 32, 48, 6
 
 Rasters are generated at 4× and downsampled with Lanczos; `make_ico.py` packs the ICO container by hand because Pillow's writer rescales from a single source and would discard the per-size tuning.
 
-### 17.4 Consequences
+### 17.4 The mark in the interface
+
+The icon is not confined to the tab. It appears twice more, both times earning its place:
+
+- **Page header** — a 28px glyph beside the wordmark, so the app is recognisable in a screenshot or a shared window.
+- **Project tiles** — the weekly note count is drawn *as a tally* (§4.2.1). This is the icon doing the app's actual job, which is a better argument for the mark than any style guide could make: the thing on the tab is the thing on the tiles is the thing you are doing.
+
+### 17.5 Consequences
 
 Shipping the manifest makes the app installable, which is what unlocks `Cmd/Ctrl+1…9` for project switching (§4.3) — a standalone window has no tab strip to claim those bindings. The icon work and the keyboard work turn out to be the same piece of work.
