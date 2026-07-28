@@ -438,7 +438,7 @@ The stored `weekKey` in the data model (§10) exists only to make **backdating**
 A browser page **cannot register an OS-global hotkey.** Three layers, in order of effort:
 
 1. **In-app shortcuts (v1, required).** See §11. The app opens with the field focused, so opening it *is* the capture action.
-2. **PWA install + OS shortcut (v1, recommended).** Installable PWA opening in its own window; the user binds a global hotkey to it via macOS Shortcuts.app / Raycast / Alfred, or a Windows shortcut. Documented in onboarding.
+2. **PWA install + OS shortcut (v1, recommended).** `manifest.webmanifest` and the icon set (§17) exist, so this path works today. Installable PWA opening in its own window; the user binds a global hotkey to it via macOS Shortcuts.app / Raycast / Alfred, or a Windows shortcut. Documented in onboarding.
 3. **Browser extension (v2, optional).** A companion extension registering a browser-level command that opens a capture popup whenever the browser is running.
 
 If a true global hotkey turns out to be non-negotiable, the correct answer is a desktop wrapper (Tauri/Electron) — the rest of this spec ports over largely unchanged, and file handling actually gets simpler.
@@ -654,3 +654,43 @@ Ship after step 3. Steps 4–8 are additive; none block daily use.
 4. **Multiple projects per note** — recommend forbidding in v1; keeps capture fast and grouping unambiguous.
 5. **Empty projects in the summary** — omit, or list as "no activity"? Recommend omitting with a toggle.
 6. **Multiple database files** — is there a real case for switching between them (personal vs. work), or is Open purely a recovery/migration path? If switching is routine, a recent-files list belongs in Settings.
+
+---
+
+## 17. Identity
+
+### 17.1 The mark
+
+A **tally**: four uprights crossed by a diagonal fifth. It is the oldest notation for counting things as they happen, which is precisely the behavior the app is trying to make cheap. It carries no metaphor that needs explaining, and it is not a clipboard, a checkmark, or a calendar page — the three icons every productivity tool already owns.
+
+| | |
+|---|---|
+| Accent | `#b4491f` — the app's accent, used as the icon's ground |
+| Mark | `#faf9f7` — the app's page background, used as the ink |
+| Grid | 64 units; uprights at x = 18, 27, 36, 45 spanning y 18→46; diagonal (13,47)→(50,17); stroke 5, round caps; corner radius 14 |
+
+### 17.2 Optical sizing
+
+**Below 24px the mark drops from four uprights to three**, with wider gaps, a heavier pen (6.5) and a tighter corner radius (11).
+
+This is not a detail to skip. At 16px the full five-stroke tally spans about eleven pixels — roughly two pixels per stroke including gaps — and antialiasing turns it into a grey smear. A tally that reads as a smear has failed at the one job a favicon has. Three uprights plus a diagonal still reads unmistakably as a tally and survives the size.
+
+The `.ico` therefore contains **independently rendered** frames at 16, 32, 48, 64, 128 and 256px, rather than one image downscaled. The `.svg` keeps the full five-stroke form: browsers that use SVG favicons draw them at 2× on modern displays, where five strokes read cleanly.
+
+### 17.3 Assets
+
+| File | Purpose |
+|------|---------|
+| `icons/favicon.svg` | Master artwork; also served to browsers that support SVG favicons |
+| `favicon.ico` | Six optically-sized frames; at repo root for anything that probes `/favicon.ico` |
+| `icons/apple-touch-icon.png` | 180px, square and full-bleed — iOS applies its own mask, so no rounding |
+| `icons/icon-192.png`, `icon-512.png` | PWA install icons, `purpose: any` |
+| `icons/icon-512-maskable.png` | Artwork inset to 62% for Android's 80% safe zone, `purpose: maskable` |
+| `manifest.webmanifest` | Name, colors, `display: standalone`, icon set |
+| `icons/render.py`, `icons/make_ico.py` | Regenerate every raster from the same geometry |
+
+Rasters are generated at 4× and downsampled with Lanczos; `make_ico.py` packs the ICO container by hand because Pillow's writer rescales from a single source and would discard the per-size tuning.
+
+### 17.4 Consequences
+
+Shipping the manifest makes the app installable, which is what unlocks `Cmd/Ctrl+1…9` for project switching (§4.3) — a standalone window has no tab strip to claim those bindings. The icon work and the keyboard work turn out to be the same piece of work.

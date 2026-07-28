@@ -43,3 +43,7 @@ dist/
 build/
 .cache/
 *.log
+
+# Icon preview scratch
+icons/_preview.png
+icons/__pycache__/

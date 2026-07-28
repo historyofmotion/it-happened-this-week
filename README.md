@@ -70,6 +70,20 @@ The key is stored in browser storage and sent only to Anthropic. It is **strippe
 
 That said: a key in a browser is readable by anyone with access to that device or profile. Acceptable for a personal tool holding your own key. **Not** acceptable for anything shared or deployed — that needs a small server-side proxy so the key never reaches the client.
 
+## Icon
+
+A tally mark — four uprights and a diagonal fifth. It's the oldest notation there is for counting things as they happen, which is exactly what the app is for.
+
+Source artwork is [`icons/favicon.svg`](./icons/favicon.svg); every raster size is generated from the same geometry by [`icons/render.py`](./icons/render.py):
+
+```bash
+cd icons && python3 render.py && python3 make_ico.py
+```
+
+`favicon.ico` carries optically-sized frames at 16, 32, 48, 64, 128 and 256px. **Below 24px the mark drops from four uprights to three** — five strokes across eleven pixels is a smudge, and a tally that reads as a smear isn't a tally. Everything else about the design stays constant.
+
+`manifest.webmanifest` makes the app installable, which is also what unlocks `Cmd+1`–`9` for project switching (a browser tab reserves those for itself; a standalone PWA window doesn't).
+
 ## Known limits
 
 - **No global hotkey.** A web page can't register one. Install as a PWA and bind an OS shortcut to the window; a browser extension is planned. If a true global hotkey is non-negotiable, this wants to be a desktop app.
