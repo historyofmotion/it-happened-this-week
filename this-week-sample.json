@@ -1,0 +1,165 @@
+{
+  "schemaVersion": 1,
+  "app": "it-happened-this-week",
+  "updatedAt": "2026-07-28T14:03:21.161Z",
+  "settings": {
+    "theme": "system",
+    "weekStartsOn": 1,
+    "dictation": true,
+    "modifier": "auto",
+    "summaryVoice": "first",
+    "model": "claude-sonnet-5",
+    "exportNag": true,
+    "lastProjectId": "p1",
+    "lastExport": null
+  },
+  "projects": [
+    {
+      "id": "p1",
+      "name": "Atlas Migration",
+      "color": "#b4491f",
+      "archived": false
+    },
+    {
+      "id": "p2",
+      "name": "Q3 Hiring",
+      "color": "#2f6f8f",
+      "archived": false
+    },
+    {
+      "id": "p3",
+      "name": "Docs Overhaul",
+      "color": "#5c7a3d",
+      "archived": false
+    },
+    {
+      "id": "p4",
+      "name": "Vendor Review",
+      "color": "#7a5c9e",
+      "archived": false
+    }
+  ],
+  "notes": [
+    {
+      "id": "n1",
+      "projectId": "p1",
+      "body": "Cut over the staging cluster\nZero downtime; rollback rehearsed twice",
+      "link": {
+        "url": "https://example.com/runbooks/atlas-cutover",
+        "label": "runbook"
+      },
+      "highlight": true,
+      "createdAt": "2026-07-27T18:00:00.000Z"
+    },
+    {
+      "id": "n2",
+      "projectId": "p3",
+      "body": "Rewrote the getting-started page; 900 words down to 400",
+      "link": null,
+      "highlight": false,
+      "createdAt": "2026-07-27T23:00:00.000Z"
+    },
+    {
+      "id": "n3",
+      "projectId": "p2",
+      "body": "Closed the senior backend req — offer accepted",
+      "link": null,
+      "highlight": true,
+      "createdAt": "2026-07-28T17:00:00.000Z"
+    },
+    {
+      "id": "n4",
+      "projectId": "p1",
+      "body": "Finished the rollback runbook and dry-ran it end to end",
+      "link": null,
+      "highlight": false,
+      "createdAt": "2026-07-28T22:00:00.000Z"
+    },
+    {
+      "id": "n5",
+      "projectId": "p4",
+      "body": "Narrowed observability vendors to two; pricing calls booked",
+      "link": {
+        "url": "https://example.com/docs/vendor-matrix",
+        "label": "matrix"
+      },
+      "highlight": false,
+      "createdAt": "2026-07-29T21:00:00.000Z"
+    },
+    {
+      "id": "n6",
+      "projectId": "p1",
+      "body": "Traced the connection-pool leak to the retry wrapper",
+      "link": {
+        "url": "https://example.com/acme/atlas/pull/882",
+        "label": "PR #882"
+      },
+      "highlight": false,
+      "createdAt": "2026-07-30T16:00:00.000Z"
+    },
+    {
+      "id": "n7",
+      "projectId": "p2",
+      "body": "Two onsites for the platform role; debrief Monday",
+      "link": null,
+      "highlight": false,
+      "createdAt": "2026-07-31T00:00:00.000Z"
+    },
+    {
+      "id": "n8",
+      "projectId": "p1",
+      "body": "Shadow-read traffic on the new cluster all day, no drift",
+      "link": null,
+      "highlight": false,
+      "createdAt": "2026-07-20T20:00:00.000Z"
+    },
+    {
+      "id": "n9",
+      "projectId": "p3",
+      "body": "Killed 14 dead doc pages and set up redirects",
+      "link": null,
+      "highlight": false,
+      "createdAt": "2026-07-21T18:00:00.000Z"
+    },
+    {
+      "id": "n10",
+      "projectId": "p2",
+      "body": "Phone screens: 5 done, 2 advanced",
+      "link": null,
+      "highlight": true,
+      "createdAt": "2026-07-22T22:00:00.000Z"
+    },
+    {
+      "id": "n11",
+      "projectId": "p4",
+      "body": "Wrote the vendor scoring rubric",
+      "link": null,
+      "highlight": false,
+      "createdAt": "2026-07-24T17:00:00.000Z"
+    },
+    {
+      "id": "n12",
+      "projectId": "p1",
+      "body": "Provisioned the new cluster and loaded a snapshot",
+      "link": null,
+      "highlight": false,
+      "createdAt": "2026-07-14T19:00:00.000Z"
+    },
+    {
+      "id": "n13",
+      "projectId": "p1",
+      "body": "Wrote the cutover plan; reviewed with infra",
+      "link": null,
+      "highlight": false,
+      "createdAt": "2026-07-15T21:00:00.000Z"
+    },
+    {
+      "id": "n14",
+      "projectId": "p3",
+      "body": "Audited the docs site — 62 pages, 14 stale",
+      "link": null,
+      "highlight": false,
+      "createdAt": "2026-07-16T17:00:00.000Z"
+    }
+  ]
+}

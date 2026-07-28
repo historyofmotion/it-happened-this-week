@@ -1,0 +1,45 @@
+# ---------------------------------------------------------------
+# Personal data. The app writes its database to a JSON file of the
+# user's choosing; the default name is this-week.json. These hold
+# real status notes and must never be committed.
+# ---------------------------------------------------------------
+this-week.json
+this-week-*.json
+!this-week-sample.json
+*.ihtw.json
+
+# Exported snapshots (Settings → Storage → Export)
+this-week-????-??-??.json
+
+# ---------------------------------------------------------------
+# Secrets. The API key lives in browser storage and is stripped from
+# the data file on every write, so it should never reach a file here
+# — these patterns are belt and braces.
+# ---------------------------------------------------------------
+.env
+.env.*
+*.key
+secrets.json
+
+# ---------------------------------------------------------------
+# OS and editor noise
+# ---------------------------------------------------------------
+.DS_Store
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+desktop.ini
+.idea/
+.vscode/
+*.swp
+*~
+
+# ---------------------------------------------------------------
+# Build / tooling, for when this grows past a single HTML file
+# ---------------------------------------------------------------
+node_modules/
+dist/
+build/
+.cache/
+*.log
