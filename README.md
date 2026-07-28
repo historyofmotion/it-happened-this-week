@@ -11,7 +11,7 @@ No accounts. No server. No telemetry. Your notes stay on your machine.
 ## Try it
 
 ```bash
-git clone https://github.com/<you>/it-happened-this-week.git
+git clone https://github.com/historyofmotion/it-happened-this-week.git
 cd it-happened-this-week
 python3 -m http.server 8000
 ```
