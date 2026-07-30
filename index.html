@@ -19,15 +19,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>It Happened This Week</title>
-<script>
-  // Redirect to primary entry point index.html if query string or direct navigation allows
-  if (location.pathname.endsWith('/it-happened-this-week-mockup.html')) {
-    history.replaceState(null, '', './index.html' + location.search + location.hash);
-  }
-</script>
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" type="image/svg+xml" href="icon.svg">
-<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="icon" type="image/svg+xml" href="icons/favicon.svg">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="theme-color" content="#b4491f">
 
 <style>
@@ -65,14 +61,24 @@
   }
   .wrap { max-width: 780px; margin: 0 auto; padding: 26px 20px 70px; }
 
+  /* ---- brand ---- */
   .brand {
-    font-size: 12px; letter-spacing: .16em; text-transform: uppercase;
-    color: var(--faint); font-weight: 600; margin-bottom: 16px;
-    display: flex; align-items: center; justify-content: space-between;
+    display: flex; align-items: center; gap: 10px; margin-bottom: 18px;
+    justify-content: space-between;
   }
-  .brand b { color: var(--accent); font-weight: 600; }
+  .brand .brandleft { display: flex; align-items: center; gap: 10px; }
+  .brand .glyph {
+    width: 28px; height: 28px; border-radius: 7px; background: var(--accent);
+    flex: 0 0 auto; display: block;
+  }
+  .brand .word {
+    font-size: 12px; letter-spacing: .16em; text-transform: uppercase;
+    color: var(--faint); font-weight: 600; line-height: 1.2;
+  }
+  .brand .word b { color: var(--accent); font-weight: 600; }
   .brand .version { font-size: 10.5px; letter-spacing: 0; text-transform: none; color: var(--faint); }
 
+  /* ---- shell ---- */
   .shell { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 22px; }
   .modes { display: inline-flex; background: var(--panel); border: 1px solid var(--line); border-radius: 9px; padding: 3px; }
   .modes button { border: 0; background: none; font: inherit; font-size: 13.5px; color: var(--muted); padding: 6px 18px; border-radius: 7px; cursor: pointer; transition: background .12s, color .12s; }
@@ -95,6 +101,7 @@
   .gear:hover svg { transform: rotate(45deg); transition: transform .25s; }
   .gear:active { transform: scale(.95); }
 
+  /* ---- project tiles ---- */
   .tiles { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 10px; }
   .tile {
     display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
@@ -109,18 +116,23 @@
     font-size: 10.5px; color: var(--faint); border: 1px solid var(--line); border-radius: 4px;
     padding: 0 4px; line-height: 15px; font-variant-numeric: tabular-nums;
   }
+  /* Tally counts — the mark that gives the app its icon, doing actual work */
   .tile .cnt {
-    font-size: 11px; font-variant-numeric: tabular-nums; min-width: 18px; text-align: center;
-    border-radius: 20px; padding: 1px 6px; background: var(--bg); color: var(--muted); line-height: 15px;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: var(--muted); line-height: 0; flex: 0 0 auto;
   }
-  .tile .cnt.zero {
-    background: transparent; color: var(--warn); border: 1px dashed var(--warn); padding: 0 5px;
+  .tile .cnt svg { display: block; overflow: visible; }
+  .tile .cnt.zero { color: var(--warn); }
+  .tile .cnt.many {
+    font-size: 11px; font-variant-numeric: tabular-nums; line-height: 15px;
+    border-radius: 20px; padding: 1px 6px; background: var(--bg);
   }
   .tile.on { border-color: var(--accent); background: var(--accent-soft); }
   .tile.on .dot { opacity: 1; }
   .tile.on .kb { color: var(--accent); border-color: var(--accent); }
-  .tile.on .cnt { background: var(--panel); color: var(--ink); }
-  .tile.on .cnt.zero { background: transparent; color: var(--warn); }
+  .tile.on .cnt { color: var(--accent); }
+  .tile.on .cnt.zero { color: var(--warn); }
+  .tile.on .cnt.many { background: var(--panel); color: var(--ink); }
   .tile.add { color: var(--muted); border-style: dashed; }
   .tile.add:hover { color: var(--accent); border-color: var(--accent); }
   #newProjInput {
@@ -130,6 +142,7 @@
   }
   #newProjInput.open { display: inline-block; }
 
+  /* ---- capture ---- */
   .capture {
     background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
     box-shadow: var(--shadow); padding: 10px; transition: border-color .15s;
@@ -151,22 +164,29 @@
   .savebtn { flex: 0 0 auto; border: 0; background: var(--accent); color: #fff; font: inherit; font-size: 13px; font-weight: 500; padding: 7px 14px; border-radius: 8px; cursor: pointer; transition: opacity .15s; }
   .savebtn:disabled { opacity: .3; cursor: default; }
 
+  /* live link chips in the capture box */
+  .linkchips-area {
+    display: flex; flex-direction: column; gap: 6px; margin: 8px 4px 2px;
+  }
   .linkchip-live {
-    display: none; align-items: center; gap: 8px; margin: 8px 4px 2px;
+    display: flex; align-items: center; gap: 8px;
     background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 6px 9px; font-size: 12.5px;
   }
-  .linkchip-live.open { display: flex; }
-  .linkchip-live .ic { color: var(--muted); }
-  .linkchip-live .u { color: var(--muted); font: 12px ui-monospace, Menlo, monospace; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex: 1 1 auto; }
+  .linkchip-live .ic { color: var(--muted); flex: 0 0 auto; display: inline-flex; align-items: center; }
   .linkchip-live input {
     border: 0; border-bottom: 1px dashed var(--line); background: transparent; color: var(--ink);
-    font: inherit; font-size: 12.5px; outline: none; width: 130px; padding: 1px 2px; flex: 0 0 auto;
+    font: inherit; font-size: 12.5px; outline: none; padding: 1px 2px; flex: 0 0 auto; width: 120px;
+  }
+  .linkchip-live input.url-edit {
+    font: 11.5px ui-monospace, Menlo, monospace; color: var(--muted);
+    flex: 1 1 auto; width: 0; min-width: 60px;
   }
   .linkchip-live input:focus { border-bottom-color: var(--accent); }
   .linkchip-live input::placeholder { color: var(--faint); }
-  .linkchip-live .x { border: 0; background: none; color: var(--faint); cursor: pointer; font-size: 15px; padding: 0 2px; }
+  .linkchip-live .x { border: 0; background: none; color: var(--faint); cursor: pointer; font-size: 15px; padding: 0 2px; flex: 0 0 auto; }
   .linkchip-live .x:hover { color: var(--accent); }
 
+  /* editing an existing note */
   .editbar {
     display: none; align-items: center; gap: 9px; margin: 0 0 9px;
     background: var(--accent-soft); border: 1px solid var(--accent); border-radius: 8px;
@@ -176,6 +196,7 @@
   .editbar .grow { flex: 1 1 auto; font-weight: 500; }
   .capture.editing { border-color: var(--accent); }
 
+  /* per-project note list under the capture controls */
   .plist { margin-top: 4px; }
   .prow {
     display: flex; align-items: flex-start; gap: 10px; padding: 8px 8px 8px 10px;
@@ -184,6 +205,11 @@
   }
   .prow:hover { background: var(--panel); border-color: var(--line); }
   .prow.iscur { border-color: var(--accent); background: var(--accent-soft); }
+  .prow .pidx {
+    flex: 0 0 auto; color: var(--faint); line-height: 0; padding-top: 6px;
+    display: inline-flex; align-items: center;
+  }
+  .prow .pidx svg { display: block; overflow: visible; }
   .prow .pbody { flex: 1 1 auto; min-width: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
   .prow .pday { font-size: 11.5px; color: var(--faint); flex: 0 0 auto; padding-top: 2px; font-variant-numeric: tabular-nums; }
   .prow .pdel { opacity: 0; border: 0; background: none; color: var(--faint); cursor: pointer; font-size: 15px; padding: 0 3px; flex: 0 0 auto; line-height: 1.2; }
@@ -194,6 +220,7 @@
   .hint { font-size: 11.5px; color: var(--faint); margin: 9px 2px 0; display: flex; gap: 14px; flex-wrap: wrap; }
   kbd { font: inherit; font-size: 10.5px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 4px; color: var(--muted); background: var(--panel); }
 
+  /* ---- week header ---- */
   .weekhead { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
   .weekhead.past { background: var(--past); border-style: dashed; }
   .whleft { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
@@ -206,12 +233,14 @@
   .robadge { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; display: none; font-weight: 600; }
   .robadge.show { display: inline; }
 
+  /* ---- lists ---- */
   h2.sec { font-size: 11px; text-transform: uppercase; letter-spacing: .09em; color: var(--faint); margin: 28px 0 10px; font-weight: 600; }
   .stats { font-size: 12.5px; color: var(--muted); margin-bottom: 12px; }
   .group { border-top: 1px solid var(--line); padding: 14px 0 6px; }
   .grouphead { display: flex; align-items: center; gap: 9px; margin-bottom: 8px; }
   .grouphead strong { font-size: 14px; font-weight: 600; }
   .grouphead span { font-size: 12px; color: var(--faint); }
+  .grouphead .grp-tally { display: inline-flex; align-items: center; color: var(--faint); line-height: 0; }
   .note { display: flex; align-items: flex-start; gap: 10px; padding: 5px 8px 5px 4px; border-radius: 7px; font-size: 14px; }
   .note:hover { background: var(--panel); }
   .note .star { cursor: pointer; color: var(--faint); font-size: 12px; line-height: 1.7; user-select: none; }
@@ -228,6 +257,7 @@
   .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 500; }
   .btn.sm { font-size: 12.5px; padding: 6px 11px; }
 
+  /* ---- modal ---- */
   .overlay { position: fixed; inset: 0; background: rgba(20,18,16,.42); display: none; align-items: center; justify-content: center; padding: 24px; z-index: 50; backdrop-filter: blur(2px); }
   .overlay.open { display: flex; }
   .modal { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; box-shadow: var(--shadow); width: min(880px, 100%); max-height: 88vh; display: flex; flex-direction: column; overflow: hidden; }
@@ -275,6 +305,7 @@
   .setrow .l { display: flex; flex-direction: column; gap: 2px; flex: 1 1 auto; min-width: 0; }
   .setrow .l small { display: block; color: var(--faint); font-size: 11.5px; line-height: 1.4; }
 
+  /* ---- editable settings controls ---- */
   select.ctl, input.ctl {
     font: inherit; font-size: 13px; color: var(--ink); background: var(--panel);
     border: 1px solid var(--line); border-radius: 7px; padding: 6px 9px; outline: none;
@@ -328,7 +359,18 @@
 <div class="wrap">
 
   <div class="brand">
-    <span>It Happened <b>This Week</b></span>
+    <span class="brandleft">
+      <svg class="glyph" viewBox="0 0 64 64" aria-hidden="true">
+        <g stroke="#faf9f7" stroke-width="5" stroke-linecap="round">
+          <line x1="18" y1="18" x2="18" y2="46"/>
+          <line x1="27" y1="18" x2="27" y2="46"/>
+          <line x1="36" y1="18" x2="36" y2="46"/>
+          <line x1="45" y1="18" x2="45" y2="46"/>
+          <line x1="13" y1="47" x2="50" y2="17"/>
+        </g>
+      </svg>
+      <span class="word">It Happened <b>This Week</b></span>
+    </span>
     <span class="version">v0.8 production</span>
   </div>
 
@@ -351,6 +393,7 @@
     </div>
   </div>
 
+  <!-- Screen reader live region for announcements -->
   <div id="ariaAnnounce" class="sr-only" aria-live="polite"></div>
 
   <!-- ================= CAPTURE ================= -->
@@ -370,20 +413,15 @@
         <button class="iconbtn" id="micBtn" title="Dictate (M)" aria-label="Dictate note">●</button>
         <button class="savebtn" id="saveBtn" disabled>Save</button>
       </div>
-      <div class="linkchip-live" id="linkChip">
-        <span class="ic">⛓</span>
-        <span class="u" id="linkUrlTxt"></span>
-        <input id="linkLabel" placeholder="label…" aria-label="Link custom label">
-        <button class="x" id="linkClear" title="Remove — puts the URL back in the text" aria-label="Remove link">×</button>
-      </div>
+      <div class="linkchips-area" id="linkChipsArea"></div>
     </div>
 
     <div class="hint">
       <span id="hintKeys"></span>
       <span><kbd>Enter</kbd> save</span>
       <span><kbd>⇧Enter</kbd> new line</span>
-      <span><kbd>M</kbd> dictate</span>
-      <span>paste a URL to attach it</span>
+      <span id="hintMic"><kbd id="hintMicKey">M</kbd> dictate</span>
+      <span>paste URLs to attach links</span>
     </div>
 
     <h2 class="sec" id="projHead">This week</h2>
@@ -414,6 +452,7 @@
   </div>
 </div>
 
+<!-- Modal Overlay -->
 <div class="overlay" id="overlay" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
   <div class="modal">
     <div class="modalhead">
@@ -431,6 +470,7 @@
 (function () {
   "use strict";
 
+  /* ---------------- Default & Seed Data ---------------- */
   var PALETTE = ["#b4491f","#2f6f8f","#5c7a3d","#7a5c9e","#a06a2c","#3f7f74","#8f4a6b","#4a5f8f","#7f7a2c"];
 
   var DEMO_PROJECTS = [
@@ -448,14 +488,63 @@
     return x;
   }
 
+  /* AI Provider Definitions */
+  var PROVIDERS = {
+    anthropic: {
+      name: "Anthropic (Claude)",
+      keyHelp: "Get an Anthropic API key at console.anthropic.com",
+      keyUrl: "https://console.anthropic.com/settings/keys",
+      placeholder: "sk-ant-api03-…",
+      models: [
+        ["claude-3-7-sonnet-latest", "Claude 3.7 Sonnet"],
+        ["claude-3-5-sonnet-20241022", "Claude 3.5 Sonnet"],
+        ["claude-3-5-haiku-20241022", "Claude 3.5 Haiku"],
+        ["claude-3-opus-20240229", "Claude 3 Opus"]
+      ]
+    },
+    openai: {
+      name: "OpenAI (GPT-4o)",
+      keyHelp: "Get an OpenAI API key at platform.openai.com",
+      keyUrl: "https://platform.openai.com/api-keys",
+      placeholder: "sk-proj-…",
+      models: [
+        ["gpt-4o", "GPT-4o"],
+        ["gpt-4o-mini", "GPT-4o mini"],
+        ["o3-mini", "o3-mini"]
+      ]
+    },
+    gemini: {
+      name: "Google Gemini",
+      keyHelp: "Get a Gemini API key at aistudio.google.com",
+      keyUrl: "https://aistudio.google.com/app/apikey",
+      placeholder: "AIzaSy…",
+      models: [
+        ["gemini-2.0-flash", "Gemini 2.0 Flash"],
+        ["gemini-1.5-pro", "Gemini 1.5 Pro"],
+        ["gemini-1.5-flash", "Gemini 1.5 Flash"]
+      ]
+    }
+  };
+
+  function getProvider(model) {
+    if (settings && settings.provider && PROVIDERS[settings.provider]) return settings.provider;
+    if (/^gpt|^o3/i.test(model)) return "openai";
+    if (/^gemini/i.test(model)) return "gemini";
+    return "anthropic";
+  }
+
+  /* Live Settings */
   var settings = {
-    theme: "system",
-    weekStartsOn: 1,
+    theme: "system",              // system | light | dark
+    weekStartsOn: 1,              // 1 = Monday, 0 = Sunday
     dictation: true,
-    modifier: "auto",
-    summaryVoice: "first",
-    model: "claude-sonnet-5",
+    modifier: "auto",             // auto | alt | cmd | none
+    provider: "anthropic",        // anthropic | openai | gemini
+    model: "claude-3-5-sonnet-20241022",
     apiKey: "",
+    apiKeys: { anthropic: "", openai: "", gemini: "" },
+    summaryVoice: "first",        // first | impersonal
+    summaryGuidance: "",          // additional custom prompt guidance
     exportNag: true,
     lastProjectId: null,
     lastExport: null
@@ -467,7 +556,7 @@
   var currentProject = null;
   var mode = "capture";
   var offset = 0;
-  var pendingLink = null;
+  var pendingLinks = [];  // [{url, label}, ...]  — multi-link support
   var aiDone = false;
   var aiText = "";
   var editingId = null;
@@ -509,6 +598,7 @@
     createDemoNote(-2, 3, "p3", "Audited the docs site — 62 pages, 14 stale")
   ];
 
+  /* PWA detection decides whether ⌘n is available or reserved by the browser */
   var isPWA = window.matchMedia && window.matchMedia("(display-mode: standalone)").matches;
 
   function modLabel() {
@@ -529,6 +619,7 @@
     else document.documentElement.setAttribute("data-theme", settings.theme);
   }
 
+  /* ---------------- Helpers ---------------- */
   var $ = function (id) { return document.getElementById(id); };
   var MON = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
   var DAY = ["Mon","Tue","Wed","Thu","Fri","Sat","Sun"];
@@ -556,7 +647,27 @@
     return Math.round((startOfWeek(dateObj, settings.weekStartsOn).getTime() - thisWeek.getTime()) / WEEK_MS);
   }
   function weekNotes(off) {
-    return notes.filter(function (x) { return offsetOf(x.createdAt) === off; });
+    return notes.filter(function (x) {
+      if (x.weekKey) {
+        var parts = x.weekKey.split("-W");
+        if (parts.length === 2) {
+          // compare against current derived weekKey for offset
+          var targetDate = new Date(thisWeek.getTime() + off * WEEK_MS);
+          var year = targetDate.getFullYear();
+          var weekNum = getWeekNumber(targetDate);
+          var key = year + "-W" + (weekNum < 10 ? "0" + weekNum : weekNum);
+          return x.weekKey === key;
+        }
+      }
+      return offsetOf(x.createdAt) === off;
+    });
+  }
+  function getWeekNumber(d) {
+    var date = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+    var dayNum = date.getUTCDay() || 7;
+    date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+    var yearStart = new Date(Date.UTC(date.getUTCFullYear(),0,1));
+    return Math.ceil((((date - yearStart) / 86400000) + 1)/7);
   }
   function domain(u) { try { return new URL(u).hostname.replace(/^www\./, ""); } catch (e) { return u; } }
   function shortUrl(u) {
@@ -573,12 +684,18 @@
     clearTimeout(toast._t); toast._t = setTimeout(function () { t.classList.remove("show"); }, 1800);
   }
 
+  /* =====================================================================
+     STORAGE ENGINE
+     Layer 1: IndexedDB (Working store - offline, durable, synchronous-like interface)
+              + localStorage fallback for preferences & API key.
+     Layer 2: File System Access API (Opt-in JSON sync target on disk).
+     ===================================================================== */
   var DB_NAME = "ihtw_db";
   var DB_VERSION = 1;
   var dbInstance = null;
 
   function initIDB() {
-    return new Promise(function (resolve) {
+    return new Promise(function (resolve, reject) {
       if (!window.indexedDB) return resolve(null);
       var req = indexedDB.open(DB_NAME, DB_VERSION);
       req.onupgradeneeded = function (e) {
@@ -592,7 +709,7 @@
         dbInstance = e.target.result;
         resolve(dbInstance);
       };
-      req.onerror = function () { resolve(null); };
+      req.onerror = function (e) { resolve(null); };
     });
   }
 
@@ -653,10 +770,12 @@
         });
       });
 
+      // Local preferences in localStorage
       localStorage.setItem("ihtw:settings", JSON.stringify(settings));
     } catch (e) {}
   }
 
+  /* File document structure */
   function serialize() {
     return {
       schemaVersion: 1,
@@ -678,7 +797,8 @@
   function forFile() {
     var d = serialize();
     d.settings = JSON.parse(JSON.stringify(settings));
-    delete d.settings.apiKey;
+    delete d.settings.apiKey;  // STABILITY: Stripped from file on every write
+    delete d.settings.apiKeys;
     return d;
   }
 
@@ -713,6 +833,7 @@
     queueFileWrite();
   }
 
+  /* Layer 2: File System Access Sync */
   var fileHandle = null, fileName = null, lastSync = null, syncState = "none";
   var hasFS = typeof window.showSaveFilePicker === "function";
 
@@ -764,6 +885,7 @@
     idbPut("handles", "fileName", fileName);
   }
 
+  /* ---------------- Storage Operations ---------------- */
   function opNew() {
     if (!hasFS) { toast("This browser can’t create a linked file — use Export instead"); return; }
     var carry = notes.length
@@ -897,6 +1019,7 @@
     if (mode === "capture") renderProjectNotes(); else renderWeek();
   }
 
+  /* ---------------- Project Tiles ---------------- */
   function activeProjects() {
     return projects.filter(function (p) { return !p.archived; })
                    .sort(function (a, b) { return (a.sortOrder || 0) - (b.sortOrder || 0); });
@@ -906,22 +1029,62 @@
     return weekNotes(0).filter(function (x) { return x.projectId === pid; }).length;
   }
 
+  /* ---------------- tally marks ----------------
+     Real tally notation: groups of five, four uprights crossed by a diagonal,
+     then the remainder as loose uprights. Same mark as the app icon.
+     Stops at 10 — past that, counting strokes is slower than reading a numeral. */
+  var TALLY_H = 15, T_TOP = 2.5, T_BOT = 12.5, T_GAP = 3.4, T_W = 1.7, T_GROUPGAP = 5;
+
+  function tallyMark(count) {
+    if (count === 0) {
+      return '<span class="cnt zero" title="Nothing logged this week" aria-label="no notes this week">' +
+        '<svg width="13" height="' + TALLY_H + '" viewBox="0 0 13 ' + TALLY_H + '" aria-hidden="true">' +
+        '<rect x="0.75" y="2.5" width="11.5" height="10" rx="2.5" fill="none" ' +
+        'stroke="currentColor" stroke-width="1.3" stroke-dasharray="2.6 2.4"/></svg></span>';
+    }
+    if (count > 10) {
+      return '<span class="cnt many" title="' + count + ' this week">' + count + '</span>';
+    }
+    var groups = Math.floor(count / 5), rem = count % 5, x = 0, marks = "";
+    function upright(cx) {
+      marks += '<line x1="' + cx.toFixed(2) + '" y1="' + T_TOP + '" x2="' + cx.toFixed(2) + '" y2="' + T_BOT + '"/>';
+    }
+    for (var g = 0; g < groups; g++) {
+      for (var i = 0; i < 4; i++) upright(x + i * T_GAP);
+      marks += '<line x1="' + (x - 1.3).toFixed(2) + '" y1="' + (T_BOT + 0.8) + '" x2="' +
+               (x + 3 * T_GAP + 1.3).toFixed(2) + '" y2="' + (T_TOP - 0.8) + '"/>';
+      x += 3 * T_GAP + T_GROUPGAP;
+    }
+    for (var r = 0; r < rem; r++) upright(x + r * T_GAP);
+    if (rem) x += (rem - 1) * T_GAP;
+    else x -= T_GROUPGAP;
+    var w = x + T_W + 2.6;
+    return '<span class="cnt" title="' + count + ' this week" aria-label="' + count +
+      ' note' + (count === 1 ? '' : 's') + ' this week">' +
+      '<svg width="' + w.toFixed(1) + '" height="' + TALLY_H + '" viewBox="-1.4 0 ' + w.toFixed(1) + ' ' + TALLY_H + '" aria-hidden="true">' +
+      '<g stroke="currentColor" stroke-width="' + T_W + '" stroke-linecap="round">' + marks + '</g></svg></span>';
+  }
+
   function renderTiles() {
     var ml = modLabel();
     var list = activeProjects();
     var html = list.map(function (p, i) {
       var kb = (ml && i < 9) ? '<span class="kb">' + ml + (i + 1) + "</span>" : "";
-      var c = countThisWeek(p.id);
-      var cnt = '<span class="cnt' + (c === 0 ? " zero" : "") + '" title="' +
-                (c === 0 ? "Nothing logged this week" : c + " this week") + '">' + c + "</span>";
+      // A zero is the whole point — it's the project that needs an update.
+      var cnt = tallyMark(countThisWeek(p.id));
       return '<button class="tile' + (currentProject && p.id === currentProject.id ? " on" : "") + '" data-proj="' + p.id + '">' +
-             '<span class="dot" style="background:' + p.color + '"></span>' + esc(p.name) + cnt + kb + "</button>";
+             '<span class="dot" style="background:' + p.color + '"></span>' + esc(p.name) + '<span class="tile-sep"> – </span>' + cnt + kb + "</button>";
     }).join("");
     html += '<button class="tile add" data-newproj>+ New</button>';
     $("tiles").innerHTML = html;
     $("hintKeys").innerHTML = ml
       ? "<kbd>" + ml + "1</kbd>–<kbd>" + ml + Math.min(list.length, 9) + "</kbd> project"
       : "click a project";
+    // Keep the dictation hint in sync with the active modifier
+    var micKeyEl = $("hintMicKey");
+    if (micKeyEl) micKeyEl.textContent = ml ? ml + "M" : "M";
+    var hintMicEl = $("hintMic");
+    if (hintMicEl) hintMicEl.style.display = settings.dictation ? "" : "none";
   }
 
   function selectProject(p, announce) {
@@ -940,6 +1103,7 @@
     $("noteInput").focus();
   }
 
+  /* ---------------- Mode Switching ---------------- */
   function setMode(m) {
     mode = m;
     var cap = m === "capture";
@@ -953,6 +1117,7 @@
     else renderWeek();
   }
 
+  /* ---------------- Capture Mode Rendering ---------------- */
   function renderProjectNotes() {
     if (!currentProject) { $("projList").innerHTML = ""; return; }
     var list = weekNotes(0)
@@ -966,19 +1131,28 @@
         " this week yet. Type above and press Enter.</div>";
       return;
     }
-    $("projList").innerHTML = list.map(function (x) {
-      var link = x.link ? '<div><a class="linkchip" href="' + esc(x.link.url) + '" target="_blank" rel="noopener">⛓ ' +
-                 esc(x.link.label || domain(x.link.url)) + "</a></div>" : "";
-      return '<div class="prow' + (editingId === x.id ? " iscur" : "") + '" data-edit="' + x.id + '">' +
-        (x.highlight ? '<span class="pstar">★</span>' : "") +
-        '<span class="pbody">' + esc(x.body) + link + "</span>" +
-        '<span class="pday">' + dayLabel(x.createdAt) + "</span>" +
-        '<button class="pdel" data-pdel="' + x.id + '" title="Delete this note" aria-label="Delete note">×</button>' +
-        "</div>";
-    }).join("");
+    // list is sorted newest-first; tally mark shows position (1 = top = most recent)
+    $("projList").innerHTML = list.map(function (x, i) {
+      var links = x.links && x.links.length ? x.links : (x.link ? [x.link] : []);
+      var linkHtml = links.map(function (lk) {
+        return '<a class="linkchip" href="' + esc(lk.url) + '" target="_blank" rel="noopener">' +
+               LINK_ICON + ' ' + esc(lk.label || domain(lk.url)) + '</a>';
+      }).join('');
+      var linkBlock = linkHtml ? '<div>' + linkHtml + '</div>' : '';
+      return '<div class="prow' + (editingId === x.id ? ' iscur' : '') + '" data-edit="' + x.id + '">' +
+        '<span class="pidx" title="Update ' + (i + 1) + '" aria-label="Update ' + (i + 1) + '">' +
+          tallyMark(i + 1) +
+        '</span>' +
+        (x.highlight ? '<span class="pstar">★</span>' : '') +
+        '<span class="pbody">' + esc(x.body) + linkBlock + '</span>' +
+        '<span class="pday">' + dayLabel(x.createdAt) + '</span>' +
+        '<button class="pdel" data-pdel="' + x.id + '" title="Delete this note" aria-label="Delete note">&times;</button>' +
+        '</div>';
+    }).join('');
   }
 
-  function hasUnsavedInput() { return !!($("noteInput").value.trim() || pendingLink); }
+  /* ---- Note Editing ---- */
+  function hasUnsavedInput() { return !!($("noteInput").value.trim() || pendingLinks.length); }
 
   function beginEdit(id) {
     var x = notes.filter(function (q) { return q.id === id; })[0];
@@ -987,7 +1161,7 @@
     if (editingId && editingId !== id) {
       if (!confirm("You're editing another note.\n\nDiscard those changes and edit this one instead?")) return;
     } else if (!editingId && hasUnsavedInput()) {
-      var unsaved = ($("noteInput").value.trim() || domain(pendingLink.url)).replace(/\s*\n+\s*/g, " ");
+      var unsaved = ($("noteInput").value.trim() || (pendingLinks.length ? domain(pendingLinks[0].url) : "")).replace(/\s*\n+\s*/g, " ");
       if (unsaved.length > 80) unsaved = unsaved.slice(0, 78) + "…";
       if (!confirm("You have unsaved text in the box above:\n\n“" + unsaved +
                    "”\n\nDiscard it and edit this note instead?")) return;
@@ -995,15 +1169,8 @@
 
     editingId = id;
     $("noteInput").value = x.body;
-    pendingLink = x.link ? { url: x.link.url, label: x.link.label || "" } : null;
-    if (pendingLink) {
-      $("linkUrlTxt").textContent = shortUrl(pendingLink.url);
-      $("linkLabel").value = pendingLink.label;
-      $("linkLabel").placeholder = domain(pendingLink.url);
-      $("linkChip").classList.add("open");
-    } else {
-      $("linkChip").classList.remove("open");
-    }
+    pendingLinks = x.links ? x.links.slice() : (x.link ? [{ url: x.link.url, label: x.link.label || "" }] : []);
+    renderLinkChips();
     $("editBar").classList.add("open");
     $("editBarTxt").textContent = "Editing note from " + dayLabel(x.createdAt) + " — Enter updates it, Esc cancels";
     $("captureBox").classList.add("editing");
@@ -1021,7 +1188,7 @@
     $("editBar").classList.remove("open");
     $("captureBox").classList.remove("editing");
     $("saveBtn").textContent = "Save";
-    if (clearField) { $("noteInput").value = ""; clearLink(false); autoGrow(); }
+    if (clearField) { $("noteInput").value = ""; clearAllLinks(); autoGrow(); }
     refreshSave();
     renderProjectNotes();
   }
@@ -1038,37 +1205,82 @@
     toast("Deleted");
   }
 
-  var URL_RE = /(https?:\/\/[^\s]+|www\.[^\s]+)/i;
+  /* ---------------- Multi-Link Attachment ---------------- */
+  /* SVG external-link icon reused for link chips */
+  var LINK_ICON = '<svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 2H2a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h7a1 1 0 0 0 1-1V7"/><polyline points="8 1 11 1 11 4"/><line x1="11" y1="1" x2="5.5" y2="6.5"/></svg>';
+
+  function renderLinkChips() {
+    var area = $("linkChipsArea");
+    area.innerHTML = pendingLinks.map(function (lk, i) {
+      return '<div class="linkchip-live" data-li="' + i + '">' +
+        '<span class="ic">' + LINK_ICON + '</span>' +
+        '<input class="u url-edit" placeholder="https://…" value="' + esc(lk.url) + '" ' +
+               'aria-label="Link URL" data-li-url="' + i + '">' +
+        '<input placeholder="' + esc(domain(lk.url)) + '" value="' + esc(lk.label) + '" ' +
+               'aria-label="Link label" data-li-label="' + i + '">' +
+        '<button class="x" data-li-rm="' + i + '" title="Remove link" aria-label="Remove link">&times;</button>' +
+        '</div>';
+    }).join('');
+    refreshSave();
+  }
 
   function attachLink(url) {
-    var full = /^https?:/i.test(url) ? url : "https://" + url;
-    pendingLink = { url: full, label: "" };
-    $("linkUrlTxt").textContent = shortUrl(full);
-    $("linkLabel").value = "";
-    $("linkLabel").placeholder = domain(full);
-    $("linkChip").classList.add("open");
-    refreshSave();
+    var full = /^https?:/i.test(url) ? url : 'https://' + url;
+    pendingLinks.push({ url: full, label: '' });
+    renderLinkChips();
   }
-  function clearLink(restore) {
-    if (restore && pendingLink) {
-      var v = $("noteInput").value;
-      $("noteInput").value = (v ? v.replace(/\s+$/, "") + " " : "") + pendingLink.url;
-    }
-    pendingLink = null;
-    $("linkChip").classList.remove("open");
-    refreshSave();
+
+  function clearAllLinks() {
+    pendingLinks = [];
+    renderLinkChips();
   }
+
+  function refreshSave() {
+    $("saveBtn").disabled = !$("noteInput").value.trim() && !pendingLinks.length;
+  }
+
+  var URL_RE = /(https?:\/\/[^\s]+|www\.[^\s]+)/i;
+
   function scanForUrl() {
     var v = $("noteInput").value;
     var m = URL_RE.exec(v);
-    if (!m || pendingLink) return;
+    if (!m) return;
     $("noteInput").value = v.replace(URL_RE, "").replace(/\s{2,}/g, " ").trim();
+    var wasFirst = pendingLinks.length === 0;
     attachLink(m[1]);
-    toast("Link attached — " + domain(m[1]) + " · type a label or just save");
+    toast(wasFirst ? "Link attached — " + domain(m[1]) + " · label or save" : "Another link added");
   }
-  function refreshSave() {
-    $("saveBtn").disabled = !$("noteInput").value.trim() && !pendingLink;
-  }
+
+  // delegate events on dynamically rendered chips
+  $("linkChipsArea").addEventListener("input", function (e) {
+    var li = e.target.getAttribute("data-li-label");
+    if (li !== null && pendingLinks[+li]) pendingLinks[+li].label = e.target.value.trim();
+    var lu = e.target.getAttribute("data-li-url");
+    if (lu !== null && pendingLinks[+lu]) {
+      pendingLinks[+lu].url = e.target.value.trim() || pendingLinks[+lu].url;
+      // update the label placeholder to match new domain
+      var chip = e.target.closest("[data-li]");
+      var labelInput = chip && chip.querySelector("[data-li-label]");
+      if (labelInput) labelInput.placeholder = domain(pendingLinks[+lu].url);
+    }
+  });
+  $("linkChipsArea").addEventListener("keydown", function (e) {
+    if (e.key === "Enter") { e.preventDefault(); save(); }
+    if (e.key === "Escape") { e.preventDefault(); input.focus(); }
+  });
+  $("linkChipsArea").addEventListener("click", function (e) {
+    var rm = e.target.closest("[data-li-rm]");
+    if (!rm) return;
+    var idx = parseInt(rm.getAttribute("data-li-rm"), 10);
+    var removed = pendingLinks.splice(idx, 1)[0];
+    renderLinkChips();
+    if (removed) {
+      var v = input.value;
+      input.value = (v ? v.replace(/\s+$/, "") + " " : "") + removed.url;
+      autoGrow();
+    }
+    input.focus();
+  });
 
   var input = $("noteInput");
 
@@ -1082,33 +1294,25 @@
       var v = input.value;
       input.value = (v ? v.replace(/\s+$/, "") + " " : "") + rest;
     }
-    if (pendingLink) { toast("One link per note — replaced previous link"); }
+    var wasFirst = pendingLinks.length === 0;
     attachLink(m[1]);
     autoGrow();
-    toast(rest ? "Link lifted out of text" : "Link attached — " + domain(m[1]));
+    toast(wasFirst ? "Link attached — " + domain(m[1]) : "Link added " + (pendingLinks.length) + " total");
   });
 
   input.addEventListener("input", function () { refreshSave(); scanForUrl(); });
 
-  $("linkLabel").addEventListener("input", function () {
-    if (pendingLink) pendingLink.label = $("linkLabel").value.trim();
-  });
-  $("linkLabel").addEventListener("keydown", function (e) {
-    if (e.key === "Enter") { e.preventDefault(); save(); }
-    if (e.key === "Escape") { e.preventDefault(); input.focus(); }
-  });
-  $("linkClear").addEventListener("click", function () { clearLink(true); input.focus(); });
-
+  /* ---------------- Save Note ---------------- */
   function save() {
     var v = input.value.trim();
-    if (!v && !pendingLink) return;
-    var link = pendingLink ? { url: pendingLink.url, label: pendingLink.label || domain(pendingLink.url) } : null;
-    var body = v || (pendingLink ? (pendingLink.label || domain(pendingLink.url)) : "");
+    if (!v && !pendingLinks.length) return;
+    var links = pendingLinks.map(function (lk) { return { url: lk.url, label: lk.label || domain(lk.url) }; });
+    var body = v || (links.length ? links[0].label : "");
 
     if (editingId) {
       notes.forEach(function (x) {
         if (x.id === editingId) {
-          x.body = body; x.link = link;
+          x.body = body; x.links = links;
           x.updatedAt = new Date().toISOString();
         }
       });
@@ -1123,7 +1327,7 @@
       id: "n" + (++uid),
       projectId: currentProject.id,
       body: body,
-      link: link,
+      links: links,
       highlight: false,
       createdAt: new Date(),
       source: "type",
@@ -1131,7 +1335,7 @@
     });
     settings.lastProjectId = currentProject.id;
     input.value = "";
-    clearLink(false);
+    clearAllLinks();
     autoGrow();
     var box = $("captureBox");
     box.classList.add("saved");
@@ -1142,7 +1346,27 @@
     toast("Saved to " + currentProject.name);
     input.focus();
   }
-  $("saveBtn").addEventListener("click", save);
+  $("saveBtn").addEventListener("click", function () {
+    if (isListening) {
+      // stop dictation first; onend will not auto-save, so we hook it once
+      var onEndOnce = function () {
+        speechRecognizer.onend = function () {
+          isListening = false;
+          $("micBtn").classList.remove("rec");
+          if (input.value.trim()) toast("Transcript ready — edit, then Enter to save");
+        };
+        save();
+      };
+      speechRecognizer.onend = function () {
+        isListening = false;
+        $("micBtn").classList.remove("rec");
+        onEndOnce();
+      };
+      speechRecognizer.stop();
+    } else {
+      save();
+    }
+  });
   $("editCancel").addEventListener("click", function () { endEdit(true); $("noteInput").focus(); });
 
   $("projList").addEventListener("click", function (e) {
@@ -1159,7 +1383,7 @@
     }
     if (e.key === "Escape") {
       if (editingId) { endEdit(true); return; }
-      input.value = ""; clearLink(false); refreshSave(); autoGrow(); return;
+      input.value = ""; clearAllLinks(); refreshSave(); autoGrow(); return;
     }
     if (!input.value && !e.metaKey && !e.ctrlKey && !e.altKey && /^[1-9]$/.test(e.key)) {
       var list = activeProjects();
@@ -1175,6 +1399,7 @@
   function autoGrowSoon() { setTimeout(autoGrow, 0); }
   input.addEventListener("input", autoGrow);
 
+  /* ---------------- Inline Project Creation ---------------- */
   $("tiles").addEventListener("click", function (e) {
     var t = e.target.closest("[data-proj]");
     if (t) { selectProject(proj(t.getAttribute("data-proj")), false); return; }
@@ -1198,6 +1423,7 @@
     if (e.key === "Escape") { this.classList.remove("open"); input.focus(); }
   });
 
+  /* ---------------- Real Web Speech API Dictation ---------------- */
   var speechRecognizer = null;
   var isListening = false;
 
@@ -1273,6 +1499,7 @@
   }
   $("micBtn").addEventListener("click", toggleMic);
 
+  /* ---------------- Summarize Mode ---------------- */
   function renderWeek() {
     var past = offset !== 0;
     $("weekLabel").textContent = fmtRange(offset);
@@ -1297,7 +1524,8 @@
         var items = list.filter(function (x) { return x.projectId === p.id; })
                         .sort(function (a, b) { return (b.highlight - a.highlight) || (new Date(a.createdAt) - new Date(b.createdAt)); });
         html += '<div class="group"><div class="grouphead"><span class="dot" style="background:' + p.color +
-                ';width:8px;height:8px;border-radius:50%"></span><strong>' + esc(p.name) + "</strong><span>" + items.length + "</span></div>";
+                ';width:8px;height:8px;border-radius:50%"></span><strong>' + esc(p.name) + '</strong><span class="grp-tally">' + tallyMark(items.length) + '</span></div>';
+        // Summarize is read-mostly — ONLY star toggle available
         items.forEach(function (x) { html += noteHTML(x, { star: true, day: true }); });
         html += "</div>";
       });
@@ -1307,19 +1535,24 @@
 
   function noteHTML(x, opts) {
     opts = opts || {};
-    var link = x.link ? '<div><a class="linkchip" href="' + esc(x.link.url) + '" target="_blank" rel="noopener">⛓ ' +
-               esc(x.link.label || domain(x.link.url)) + "</a></div>" : "";
+    var links = x.links && x.links.length ? x.links : (x.link ? [x.link] : []);
+    var linkHtml = links.map(function (lk) {
+      return '<a class="linkchip" href="' + esc(lk.url) + '" target="_blank" rel="noopener">' +
+             LINK_ICON + ' ' + esc(lk.label || domain(lk.url)) + '</a>';
+    }).join(' ');
+    var linkBlock = linkHtml ? '<div>' + linkHtml + '</div>' : '';
     return '<div class="note">' +
-      (opts.star ? '<span class="star' + (x.highlight ? " on" : "") + '" data-star="' + x.id + '" title="Toggle Highlight">' + (x.highlight ? "★" : "☆") + "</span>"
+      (opts.star ? '<span class="star' + (x.highlight ? " on" : "") + '" data-star="' + x.id + '" title="Toggle Highlight">' + (x.highlight ? '★' : '☆') + '</span>'
                  : '<span class="dot" style="background:' + proj(x.projectId).color + ';width:8px;height:8px;border-radius:50%;margin-top:7px;flex:0 0 auto"></span>') +
-      '<span class="body">' + esc(x.body) + link + "</span>" +
-      (opts.day ? '<span class="day">' + dayLabel(x.createdAt) + "</span>" : "") +
-      "</div>";
+      '<span class="body">' + esc(x.body) + linkBlock + '</span>' +
+      (opts.day ? '<span class="day">' + dayLabel(x.createdAt) + '</span>' : '') +
+      '</div>';
   }
 
   function renderWeekDropdown() {
     var dd = $("weekDropdown");
     if (!dd) return;
+    // Find all offsets with notes
     var offsetsMap = {};
     offsetsMap[0] = true;
     notes.forEach(function (n) { offsetsMap[offsetOf(n.createdAt)] = true; });
@@ -1347,6 +1580,7 @@
       if (!items.length) return;
       out += "\n### " + p.name + "\n";
       items.forEach(function (x) {
+        // Multi-line continuation lines indented by 2 spaces inside bullet
         var body = x.body.replace(/\n/g, "\n  ");
         var d = new Date(x.createdAt);
         out += "- " + body + " (" + dayLabel(x.createdAt) + " " + MON[d.getMonth()] + " " + d.getDate() + ")" +
@@ -1356,18 +1590,14 @@
     return out.trimEnd();
   }
 
-  var API_URL = "https://api.anthropic.com/v1/messages";
+  /* ---------------- Multi-Provider AI Integration ---------------- */
 
   function buildPrompt(off) {
     var voice = settings.summaryVoice === "impersonal"
       ? "Write impersonally, with no subject pronoun — \"Shipped the cutover\", not \"I shipped the cutover\"."
       : "Write in the first person singular — \"I shipped the cutover\".";
 
-    return [
-      "Below are raw notes I logged during one work week, grouped by project.",
-      "Rewrite them as a status update.",
-      "",
-      "Rules:",
+    var rules = [
       "- Preserve every fact. Do not invent anything not in the notes — no numbers, names, dates, or outcomes that aren't there.",
       "- Do not add adjectives the notes don't support. \"Fixed the leak\" does not become \"heroically fixed a critical leak\".",
       "- Past tense. " + voice,
@@ -1377,7 +1607,19 @@
       "- A note starting with ★ is one I flagged as important — lead its project's paragraph with it.",
       "- Keep any markdown links exactly as written.",
       "- A note spanning several lines is one item, not several.",
-      "- Output markdown only. No preamble, no headings, no closing commentary.",
+      "- Output markdown only. No preamble, no headings, no closing commentary."
+    ];
+
+    if (settings.summaryGuidance && settings.summaryGuidance.trim()) {
+      rules.push("- Additional style & tone guidance: " + settings.summaryGuidance.trim());
+    }
+
+    return [
+      "Below are raw notes I logged during one work week, grouped by project.",
+      "Rewrite them as a status update.",
+      "",
+      "Rules:",
+      rules.join("\n"),
       "",
       "The notes:",
       "",
@@ -1394,8 +1636,11 @@
       if (!items.length) return;
       out += "\n## " + p.name + "\n";
       items.forEach(function (x) {
-        out += (x.highlight ? "★ " : "- ") + x.body.replace(/\n/g, " / ") +
-               (x.link ? " [" + (x.link.label || domain(x.link.url)) + "](" + x.link.url + ")" : "") + "\n";
+        var lks = x.links && x.links.length ? x.links : (x.link ? [x.link] : []);
+        var linkStr = lks.map(function (lk) {
+          return " [" + (lk.label || domain(lk.url)) + "](" + lk.url + ")";
+        }).join("");
+        out += (x.highlight ? "★ " : "- ") + x.body.replace(/\n/g, " / ") + linkStr + "\n";
       });
     });
     return out;
@@ -1417,65 +1662,104 @@
     var pane = $("aiPane");
     if (!pane) return;
 
-    var key = (settings.apiKey || "").trim();
+    var provKey = getProvider(settings.model);
+    var provInfo = PROVIDERS[provKey] || PROVIDERS.anthropic;
+    var key = ((settings.apiKeys && settings.apiKeys[provKey]) || settings.apiKey || "").trim();
+
     if (!key) {
-      pane.innerHTML = '<div class="aierr"><b>No API key set.</b> Add one in ⚙ → AI.<br>' +
-        'Get a key at <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a>.<br>' +
+      pane.innerHTML = '<div class="aierr"><b>No ' + esc(provInfo.name) + ' API key set.</b> Add one in ⚙ → AI.<br>' +
+        'Get a key at <a href="' + esc(provInfo.keyUrl) + '" target="_blank" rel="noopener">' + esc(provInfo.keyUrl.replace('https://', '')) + '</a>.<br>' +
         'The grouped list on the left works without it.</div>';
       return;
     }
 
-    pane.innerHTML = '<span class="placeholder">Asking ' + esc(settings.model) + "…</span>";
+    pane.innerHTML = '<span class="placeholder">Asking ' + esc(settings.model) + '…</span>';
 
-    fetch(API_URL, {
-      method: "POST",
-      headers: {
-        "content-type": "application/json",
-        "x-api-key": key,
-        "anthropic-version": "2023-06-01",
-        "anthropic-dangerous-direct-browser-access": "true"
-      },
-      body: JSON.stringify({
-        model: settings.model,
-        max_tokens: 1200,
-        messages: [{ role: "user", content: buildPrompt(off) }]
-      })
-    }).then(function (r) {
-      return r.json().then(function (data) { return { ok: r.ok, status: r.status, data: data }; });
-    }).then(function (res) {
-      if (!res.ok) {
-        var msg = (res.data && res.data.error && res.data.error.message) || ("HTTP " + res.status);
-        var hint = res.status === 401 ? "That key was rejected — check it in ⚙ → AI."
-                 : res.status === 404 ? "That model name wasn't found — try another in ⚙ → AI."
-                 : res.status === 429 ? "Rate limited or out of credit. Try again shortly."
-                 : "";
-        pane.innerHTML = '<div class="aierr"><b>The request failed.</b> ' + esc(msg) +
-          (hint ? "<br>" + hint : "") + "<br>The grouped list on the left is unaffected.</div>";
-        return;
-      }
-      var text = (res.data.content || [])
-        .filter(function (b) { return b.type === "text"; })
-        .map(function (b) { return b.text; }).join("\n").trim();
-      if (!text) { pane.innerHTML = '<div class="aierr">The model returned nothing. Try again.</div>'; return; }
+    var promptText = buildPrompt(off);
+    var reqPromise;
 
-      aiText = text;
-      pane.innerHTML = mdToHtml(text);
+    if (provKey === "openai") {
+      reqPromise = fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "authorization": "Bearer " + key
+        },
+        body: JSON.stringify({
+          model: settings.model,
+          max_tokens: 1200,
+          messages: [{ role: "user", content: promptText }]
+        })
+      }).then(function (r) {
+        return r.json().then(function (d) {
+          if (!r.ok) throw new Error((d.error && d.error.message) || ("HTTP " + r.status));
+          var text = (d.choices && d.choices[0] && d.choices[0].message && d.choices[0].message.content) || "";
+          var tok = d.usage && d.usage.completion_tokens;
+          return { text: text, tokens: tok };
+        });
+      });
+    } else if (provKey === "gemini") {
+      var geminiUrl = "https://generativelanguage.googleapis.com/v1beta/models/" +
+                      encodeURIComponent(settings.model) + ":generateContent?key=" + encodeURIComponent(key);
+      reqPromise = fetch(geminiUrl, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: promptText }] }]
+        })
+      }).then(function (r) {
+        return r.json().then(function (d) {
+          if (!r.ok) throw new Error((d.error && d.error.message) || ("HTTP " + r.status));
+          var cand = d.candidates && d.candidates[0];
+          var text = (cand && cand.content && cand.content.parts && cand.content.parts[0] && cand.content.parts[0].text) || "";
+          var tok = d.usageMetadata && d.usageMetadata.candidatesTokenCount;
+          return { text: text, tokens: tok };
+        });
+      });
+    } else {
+      // Anthropic default
+      reqPromise = fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-api-key": key,
+          "anthropic-version": "2023-06-01",
+          "anthropic-dangerous-direct-browser-access": "true"
+        },
+        body: JSON.stringify({
+          model: settings.model,
+          max_tokens: 1200,
+          messages: [{ role: "user", content: promptText }]
+        })
+      }).then(function (r) {
+        return r.json().then(function (d) {
+          if (!r.ok) throw new Error((d.error && d.error.message) || ("HTTP " + r.status));
+          var text = (d.content || []).filter(function (b) { return b.type === "text"; }).map(function (b) { return b.text; }).join("\n").trim();
+          var tok = d.usage && d.usage.output_tokens;
+          return { text: text, tokens: tok };
+        });
+      });
+    }
+
+    reqPromise.then(function (res) {
+      if (!res.text) { pane.innerHTML = '<div class="aierr">The model returned nothing. Try again.</div>'; return; }
+      aiText = res.text;
+      pane.innerHTML = mdToHtml(res.text);
       aiDone = true;
-      var u = res.data.usage || {};
-      toast("Generated" + (u.output_tokens ? " · " + u.output_tokens + " tokens" : ""));
+      toast("Generated" + (res.tokens ? " · " + res.tokens + " tokens" : ""));
     }).catch(function (e) {
+      var msg = e && e.message ? e.message : "Request failed";
       var isFileUrl = location.protocol === "file:";
-      pane.innerHTML = '<div class="aierr"><b>Couldn\'t reach the API.</b> ' +
-        (isFileUrl
-          ? "This page is open as a <code>file://</code> URL, which the API refuses. " +
-            "Serve the folder over http instead — from terminal run " +
-            "<code>python3 -m http.server 8000</code>, then load " +
-            "<code>http://localhost:8000/index.html</code>."
-          : "Check your network connection. " + esc(e && e.message ? e.message : "")) +
-        "<br>The grouped list on the left is unaffected.</div>";
+      pane.innerHTML = '<div class="aierr"><b>API call failed (' + esc(provInfo.name) + ').</b><br>' +
+        esc(msg) +
+        (isFileUrl && provKey === "anthropic"
+          ? '<br><br>Anthropic requires serving over HTTP (not <code>file://</code>). Run <code>python3 -m http.server 8000</code> in terminal.'
+          : '') +
+        '<br>The grouped list on the left is unaffected.</div>';
     });
   }
 
+  /* ---------------- Modal & Settings UI ---------------- */
   function openModal(title, actions, tabs, body) {
     $("modalTitle").textContent = title;
     $("modalActions").innerHTML = actions || "";
@@ -1582,30 +1866,59 @@
         '<div class="notice" style="margin-top:14px">Keep active projects under ~10 for the best capture tile row layout.</div></div>';
     }
     if (settingsTab === "ai") {
-      var keySet = !!(settings.apiKey || "").trim();
+      var provKey = getProvider(settings.model);
+      var provInfo = PROVIDERS[provKey] || PROVIDERS.anthropic;
+      var currentKey = ((settings.apiKeys && settings.apiKeys[provKey]) || settings.apiKey || "").trim();
+      var keySet = !!currentKey;
       var served = location.protocol !== "file:";
-      return '<div class="set"><h4>AI summary</h4>' +
-        '<p class="sub">Optional. The grouped list is generated locally and always works. Your API key stays in browser storage and is never written to the data file.</p>' +
 
-        '<div class="setrow"><span class="l">API key<small>' +
-          (keySet ? "Set. Clear the field to remove it." : "Not set — “Polish with AI” will prompt for a key.") +
-          '</small></span><input class="ctl mono" type="password" data-set="apiKey" value="' +
-          esc(settings.apiKey || "") + '" placeholder="sk-ant-…"></div>' +
+      var providerOpts = [
+        ["anthropic", "Anthropic (Claude)"],
+        ["openai", "OpenAI (GPT-4o)"],
+        ["gemini", "Google Gemini"]
+      ];
 
-        '<div class="setrow"><span class="l">Model</span>' +
-          sel("model", [["claude-opus-5","Claude Opus 5"],["claude-sonnet-5","Claude Sonnet 5"],["claude-haiku-4-5-20251001","Claude Haiku 4.5"]]) + "</div>" +
+      return '<div class="set"><h4>AI summary settings</h4>' +
+        '<p class="sub">Optional. Summaries are generated on demand. Your API key stays in browser storage and is never written to data files.</p>' +
 
+        // 1. Model & Provider first
+        '<div class="setrow"><span class="l">AI Engine<small>Select provider & model.</small></span>' +
+          '<div style="display:flex;gap:6px;align-items:center">' +
+            '<select class="ctl" data-set-provider>' + providerOpts.map(function (p) {
+              return '<option value="' + p[0] + '"' + (provKey === p[0] ? " selected" : "") + '>' + p[1] + '</option>';
+            }).join('') + '</select>' +
+            '<select class="ctl" data-set="model">' + provInfo.models.map(function (m) {
+              return '<option value="' + m[0] + '"' + (settings.model === m[0] ? " selected" : "") + '>' + m[1] + '</option>';
+            }).join('') + '</select>' +
+          '</div>' +
+        '</div>' +
+
+        // 2. API Key second
+        '<div class="setrow"><span class="l">API key (' + esc(provInfo.name) + ')<small>' +
+          (keySet ? "Set for " + esc(provInfo.name) + ". Clear to remove." : "Not set — needed for AI Polish.") +
+          '</small></span><input class="ctl mono" type="password" data-set-apikey="' + provKey + '" value="' +
+          esc(currentKey) + '" placeholder="' + esc(provInfo.placeholder) + '"></div>' +
+
+        // 3. Summary Voice & Custom Guidance third
         '<div class="setrow"><span class="l">Summary voice<small>Changes prompt tone, not stored notes.</small></span>' +
           seg("summaryVoice", [["first","I shipped…"],["impersonal","Shipped…"]]) + "</div>" +
 
-        '<div class="notice" style="margin-top:16px"><b>Setup & Security</b><br>' +
-          '1. Get a key at <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener" style="color:var(--accent)">console.anthropic.com/settings/keys</a>.<br>' +
-          '2. ' + (served
-            ? 'Server protocol is <code style="font:11.5px ui-monospace,Menlo,monospace">' + esc(location.protocol) + '</code>. Browser API calls are supported.'
-            : 'Page is open as <code style="font:11.5px ui-monospace,Menlo,monospace">file://</code>. Run <code style="font:11.5px ui-monospace,Menlo,monospace">python3 -m http.server 8000</code> and open <code style="font:11.5px ui-monospace,Menlo,monospace">http://localhost:8000/index.html</code>.') +
-        "</div>" +
+        '<div class="setrow" style="align-items:flex-start"><span class="l">Additional guidance<small>Custom style & prompt rules.</small></span>' +
+          '<textarea class="ctl" data-set-input="summaryGuidance" rows="2" style="width:200px;font-family:inherit;font-size:12.5px;padding:5px 8px;resize:vertical" placeholder="e.g. Focus on technical items, bullet points, etc.">' +
+          esc(settings.summaryGuidance || "") + '</textarea></div>' +
 
-        "</div>";
+        // 4. Setup & Security Help at the bottom tailored to model/provider
+        '<div class="notice" style="margin-top:16px"><b>Setup & Help for ' + esc(provInfo.name) + '</b><br>' +
+          '1. Get a key at <a href="' + esc(provInfo.keyUrl) + '" target="_blank" rel="noopener" style="color:var(--accent)">' + esc(provInfo.keyUrl.replace('https://', '')) + '</a>.<br>' +
+          '2. ' + (provKey === "anthropic"
+            ? (served
+                ? 'Server protocol is <code style="font:11.5px ui-monospace,Menlo,monospace">' + esc(location.protocol) + '</code>. Direct browser API calls are supported.'
+                : 'Anthropic API requires HTTP server. Run <code style="font:11.5px ui-monospace,Menlo,monospace">python3 -m http.server 8000</code> and open <code style="font:11.5px ui-monospace,Menlo,monospace">http://localhost:8000/index.html</code>.')
+            : (provKey === "openai"
+                ? 'OpenAI API key requires active platform credits. Direct browser API calls are supported.'
+                : 'Google Gemini API key requires a Google AI Studio project. Free tier is available.')) +
+        '</div>' +
+      '</div>';
     }
 
     var ml = modLabel();
@@ -1614,9 +1927,9 @@
       ["1–9", "Select project", "only while capture field is empty"],
       ["Enter", "Save note", ""],
       ["⇧Enter", "New line inside note", "⌥Enter works too"],
-      ["M", "Toggle dictation", settings.dictation ? "field must be empty" : "dictation is disabled"],
+      [(ml || "—") + "M", "Toggle dictation", settings.dictation ? (ml ? "same modifier as project keys" : "modifier disabled") : "dictation is disabled"],
       ["Esc", "Clear field / link", "also closes modals"],
-      ["⌘⇧Tab", "Switch mode", "Tab alone = focus navigation"],
+      ["`", "Switch mode", "backtick — works in any browser"],
       ["N or /", "Focus capture field", "from Summarize mode"],
       ["← →", "Step weeks", "Summarize mode"],
       ["T or Home", "Return to current week", "Summarize mode"],
@@ -1632,7 +1945,7 @@
       '<div class="setrow"><span class="l">Number shortcut<small>' +
         (isPWA ? "Running as installed PWA — ⌘ is available." : "Running in browser tab — ⌘1–9 is reserved by browser.") +
         '</small></span>' + sel("modifier", [["auto","Auto (" + (isPWA ? "⌘" : "⌥") + ")"],["alt","⌥ Option"],["cmd","⌘ Command"],["none","Off"]]) + "</div>" +
-      '<div class="setrow"><span class="l">Remind me to export<small>Nag if no file connected in 14 days.</small></span>' + tog("exportNag") + "</div>" +
+      '<div class="setrow"><span class="l">Remind me to export<small>Nag daily if no file is connected.</small></span>' + tog("exportNag") + "</div>" +
       '<h4 style="margin-top:22px">Shortcuts</h4><table class="keys">' + rows2 + "</table>" +
       "</div>";
   }
@@ -1670,11 +1983,13 @@
       }).join("") + "</div>", settingsBody());
   }
 
+  /* ---------------- Week Navigation ---------------- */
   function goCurrent() { offset = 0; renderWeek(); toast("Back to this week"); }
   $("prevWk").addEventListener("click", function () { offset--; renderWeek(); });
   $("nextWk").addEventListener("click", function () { if (offset < 0) { offset++; renderWeek(); } });
   $("thisWeekBtn").addEventListener("click", goCurrent);
 
+  // Star highlight is the only mutation available in Summarize.
   $("weekBody").addEventListener("click", function (e) {
     var s = e.target.closest("[data-star]");
     if (!s) return;
@@ -1693,6 +2008,7 @@
   $("summaryBtn").addEventListener("click", openSummary);
   $("gearBtn").addEventListener("click", function () { openSettings("storage"); });
 
+  /* ---------------- Global Hotkeys ---------------- */
   document.addEventListener("keydown", function (e) {
     var modalOpen = $("overlay").classList.contains("open");
     var typing = /input|textarea/i.test((document.activeElement || {}).tagName || "");
@@ -1708,17 +2024,17 @@
       return;
     }
     if ((e.metaKey || e.ctrlKey) && e.key === ",") { e.preventDefault(); openSettings("storage"); return; }
-    if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === "Tab") {
+    if (e.key === "`" && !typing && !modalOpen) {
       e.preventDefault(); setMode(mode === "capture" ? "summarize" : "capture"); return;
     }
     if (e.key === "Escape") {
       if (modalOpen) { closeModal(); return; }
       if (mode === "summarize" && offset !== 0) { goCurrent(); return; }
     }
+    if ((e.key === "m" || e.key === "M") && settings.dictation && modMatches(e)) { e.preventDefault(); setMode("capture"); toggleMic(); return; }
     if (typing || modalOpen) return;
 
     if (e.key === "n" || e.key === "N" || e.key === "/") { e.preventDefault(); setMode("capture"); return; }
-    if ((e.key === "m" || e.key === "M") && settings.dictation) { e.preventDefault(); setMode("capture"); toggleMic(); return; }
     if (mode === "summarize") {
       if (e.key === "ArrowLeft") { offset--; renderWeek(); }
       if (e.key === "ArrowRight" && offset < 0) { offset++; renderWeek(); }
@@ -1726,17 +2042,54 @@
     }
   });
 
+  /* ---------------- Settings Event Delegation ---------------- */
   $("overlay").addEventListener("change", function (e) {
+    var provEl = e.target.closest("[data-set-provider]");
+    if (provEl) {
+      var newProv = provEl.value;
+      settings.provider = newProv;
+      if (PROVIDERS[newProv] && PROVIDERS[newProv].models[0]) {
+        settings.model = PROVIDERS[newProv].models[0][0];
+      }
+      if (!settings.apiKeys) settings.apiKeys = {};
+      settings.apiKey = settings.apiKeys[newProv] || "";
+      persist();
+      openSettings("ai");
+      toast("Provider changed to " + PROVIDERS[newProv].name);
+      return;
+    }
     var el = e.target.closest("[data-set]");
     if (!el) return;
     var key = el.getAttribute("data-set");
     var val = el.value;
+    if (key === "model") {
+      var p = getProvider(val);
+      settings.provider = p;
+      if (!settings.apiKeys) settings.apiKeys = {};
+      settings.apiKey = settings.apiKeys[p] || "";
+    }
     if (key === "weekStartsOn") val = parseInt(val, 10);
     applySetting(key, val);
-    if (key === "modifier" || key === "weekStartsOn") openSettings(settingsTab);
+    if (key === "modifier" || key === "weekStartsOn" || key === "model") openSettings(settingsTab);
     toast("Saved");
   });
   $("overlay").addEventListener("input", function (e) {
+    var keyInput = e.target.closest("[data-set-apikey]");
+    if (keyInput) {
+      var p = keyInput.getAttribute("data-set-apikey");
+      if (!settings.apiKeys) settings.apiKeys = {};
+      settings.apiKeys[p] = keyInput.value;
+      settings.apiKey = keyInput.value;
+      localStorage.setItem("ihtw:settings", JSON.stringify(settings));
+      return;
+    }
+    var txtInput = e.target.closest("[data-set-input]");
+    if (txtInput) {
+      var k = txtInput.getAttribute("data-set-input");
+      settings[k] = txtInput.value;
+      localStorage.setItem("ihtw:settings", JSON.stringify(settings));
+      return;
+    }
     var el = e.target.closest("[data-set]");
     if (el && el.tagName === "INPUT" && el.type !== "color") {
       settings[el.getAttribute("data-set")] = el.value;
@@ -1785,6 +2138,7 @@
       var to = parts[0] === "up" ? idx - 1 : idx + 1;
       if (to >= 0 && to < projects.length) {
         var tmp = projects[idx]; projects[idx] = projects[to]; projects[to] = tmp;
+        // Update sortOrder
         projects.forEach(function (p, i) { p.sortOrder = i; });
         renderTiles(); persist(); openSettings("projects");
       }
@@ -1837,7 +2191,9 @@
     if (writeTimer) { clearTimeout(writeTimer); writeFile(); }
   });
 
+  /* ---------------- Application Boot Routine ---------------- */
   (function boot() {
+    // 1. Load Local Settings
     try {
       var storedSettings = localStorage.getItem("ihtw:settings");
       if (storedSettings) {
@@ -1846,6 +2202,7 @@
       }
     } catch (e) {}
 
+    // 2. Initialize IndexedDB
     initIDB().then(function (db) {
       if (!db) return loadFallbackData();
       return Promise.all([
@@ -1891,6 +2248,7 @@
       setMode("capture");
       setSync(hasFS ? "local" : "local");
 
+      // Reconnect persistent File Handle if previously authorized
       idbGet("handles", "fileHandle").then(function (h) {
         if (!h) return;
         fileHandle = h;
@@ -1903,9 +2261,20 @@
         });
       });
 
+      // Register Service Worker for PWA
       if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('./sw.js').catch(function () {});
       }
+
+      // Daily export nag: show a prompt if no file is connected and it's been a day
+      setTimeout(function () {
+        if (!settings.exportNag || fileHandle) return;
+        var DAY_MS = 86400000;
+        var since = settings.lastExport ? Date.now() - settings.lastExport : DAY_MS + 1;
+        if (since > DAY_MS) {
+          toast("No file connected — consider exporting your notes");
+        }
+      }, 1200);
 
       toast("Ready — " + notes.length + " notes loaded");
     }

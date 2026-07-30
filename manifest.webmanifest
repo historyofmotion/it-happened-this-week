@@ -2,7 +2,7 @@
   "name": "It Happened This Week",
   "short_name": "This Week",
   "description": "Capture what you got done as it happens, grouped by project. Roll it up on Friday.",
-  "start_url": "./it-happened-this-week-mockup.html",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "any",
