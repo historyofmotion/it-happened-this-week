@@ -284,10 +284,42 @@
   .pane .narrative p { margin: 0 0 12px; }
   .placeholder { color: var(--faint); font-size: 13.5px; line-height: 1.6; }
 
-  /* ---- sectioned summary ---- */
-  .sumdoc { padding: 4px 18px 20px; }
-  .sumsec { padding: 16px 0; border-bottom: 1px solid var(--line); }
-  .sumsec:last-child { border-bottom: 0; }
+  /* ---- sectioned summary, inline in the Summarize tab ---- */
+
+  /* Toolbar */
+  .actions-top { align-items: center; }
+  .toolnote { font-size: 11.5px; color: var(--faint); }
+  .cntpill {
+    display: inline-block; min-width: 16px; text-align: center; font-size: 10.5px;
+    line-height: 15px; border-radius: 20px; padding: 0 5px; margin-left: 5px;
+    background: rgba(255,255,255,.28); font-variant-numeric: tabular-nums;
+  }
+  .btn .aiglyph, .minibtn .aiglyph { vertical-align: -2px; margin-right: 4px; }
+  .btn svg { vertical-align: -2px; margin-right: 5px; }
+
+  /* Project cards are the unit of the report; the overview supports them. */
+  .projgroups { display: flex; flex-direction: column; gap: 12px; }
+  .sumsec.projcard {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 11px;
+    padding: 14px 16px 12px;
+  }
+  .sumsec.overview {
+    background: transparent; border: 1px dashed var(--line); border-radius: 11px;
+    padding: 12px 16px; margin: 16px 0 18px;
+  }
+  .ovlabel {
+    display: inline-flex; align-items: center; gap: 5px; font-size: 11px;
+    text-transform: uppercase; letter-spacing: .09em; font-weight: 600; color: var(--faint);
+  }
+  .sumsec.overview .secbody { font-size: 13.5px; }
+
+  /* AI buttons carry the sparkle and go quietly loud when a refresh is due. */
+  .minibtn.aibtn { display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; }
+  .minibtn.aibtn.wants { color: var(--accent); border-color: var(--accent); }
+  .spin { display: inline-block; animation: aispin 1.1s linear infinite; }
+  @keyframes aispin { to { transform: rotate(360deg); } }
+
+  .sumsec { padding: 16px 0; }
   .sechead { display: flex; align-items: center; gap: 9px; margin-bottom: 10px; flex-wrap: wrap; }
   .sechead b { font-size: 14.5px; font-weight: 600; }
   .sechead .dot { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 auto; }
@@ -493,12 +525,8 @@
       <button class="thisweek" id="thisWeekBtn" title="Return to current week (T)">↩ This week</button>
     </div>
 
-    <!-- The reason you opened this tab. Above the week, not buried under it —
-         you shouldn't have to scroll past what you already know to reach the
-         thing you came to do. -->
-    <div class="actions actions-top">
-      <button class="btn primary" id="summaryBtn">Generate summary</button>
-    </div>
+    <!-- The reason you opened this tab. Above the week, not buried under it. -->
+    <div class="actions actions-top" id="sumToolbar"></div>
 
     <div id="weekBody"></div>
   </div>
@@ -1320,6 +1348,16 @@
   /* SVG external-link icon reused for link chips */
   var LINK_ICON = '<svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 2H2a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h7a1 1 0 0 0 1-1V7"/><polyline points="8 1 11 1 11 4"/><line x1="11" y1="1" x2="5.5" y2="6.5"/></svg>';
 
+  // A four-point sparkle. Used everywhere the model is involved, and nowhere
+  // else — so "this button spends a request" is legible at a glance.
+  var AI_ICON = '<svg class="aiglyph" width="13" height="13" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">' +
+    '<path d="M8 0.6l1.5 4.2 4.2 1.5-4.2 1.5L8 12l-1.5-4.2L2.3 6.3l4.2-1.5z"/>' +
+    '<path d="M13 9.6l.7 1.9 1.9.7-1.9.7-.7 1.9-.7-1.9-1.9-.7 1.9-.7z" opacity=".65"/></svg>';
+
+  var CHECK_ICON = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="2.5 8.5 6.5 12.5 13.5 3.5"/></svg>';
+
+  var COPY_ICON = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="5.5" width="9" height="9" rx="1.8"/><path d="M10.5 2.5h-8a1 1 0 0 0-1 1v8"/></svg>';
+
   function renderLinkChips() {
     var area = $("linkChipsArea");
     area.innerHTML = pendingLinks.map(function (lk, i) {
@@ -1625,23 +1663,77 @@
     var used = {}; list.forEach(function (x) { used[x.projectId] = true; });
     var active = projects.filter(function (p) { return used[p.id]; });
 
-    var html = '<h2 class="sec">By project</h2>';
     if (!list.length) {
-      html += '<div class="empty">Fresh week. Nothing logged yet — switch to Capture and add something.</div>';
-    } else {
-      html += '<div class="stats">' + list.length + " note" + (list.length === 1 ? "" : "s") +
-              " · " + active.length + " project" + (active.length === 1 ? "" : "s") + "</div>";
-      active.forEach(function (p) {
-        var items = list.filter(function (x) { return x.projectId === p.id; })
-                        .sort(function (a, b) { return (b.highlight - a.highlight) || (new Date(a.createdAt) - new Date(b.createdAt)); });
-        html += '<div class="group"><div class="grouphead"><span class="dot" style="background:' + p.color +
-                ';width:8px;height:8px;border-radius:50%"></span><strong>' + esc(p.name) + '</strong><span class="grp-tally">' + tallyMark(items.length) + '</span></div>';
-        // Summarize is read-mostly — ONLY star toggle available
-        items.forEach(function (x) { html += noteHTML(x, { star: true, day: true }); });
-        html += "</div>";
-      });
+      $("weekBody").innerHTML =
+        '<div class="empty">Fresh week. Nothing logged yet — switch to Capture and add something.</div>';
+      paintToolbar(offset);
+      return;
     }
+
+    // Projects are the unit of the report. Each is a card carrying its own AI
+    // summary and the notes that produced it; the week overview sits above as
+    // a lighter, supporting block.
+    var html = "";
+
+    html += '<section class="sumsec overview" id="sec-wrap-overview">' +
+      '<div class="sechead" id="sec-head-overview"></div>' +
+      '<div class="narrative secbody" id="sec-body-overview"></div>' +
+      "</section>";
+
+    html += '<div class="projgroups">';
+    active.forEach(function (p) {
+      var id = secId(p.id);
+      var items = list.filter(function (x) { return x.projectId === p.id; })
+                      .sort(function (a, b) { return (b.highlight - a.highlight) || (new Date(a.createdAt) - new Date(b.createdAt)); });
+      html += '<section class="sumsec projcard" id="sec-wrap-' + id + '">' +
+        '<div class="sechead" id="sec-head-' + id + '"></div>' +
+        '<div class="narrative secbody" id="sec-body-' + id + '"></div>' +
+        '<div class="rawwrap"><div class="rawlabel">As entered ' + tallyMark(items.length) + "</div>" +
+        '<div id="raw-' + id + '">' + rawNotesHtml(offset, p.id) + "</div></div>" +
+        "</section>";
+    });
+    html += "</div>";
+
     $("weekBody").innerHTML = html;
+    paintAllSections(offset);
+  }
+
+  /* The toolbar above the week: one AI action, one Copy. */
+  function paintToolbar(off) {
+    var bar = $("sumToolbar");
+    if (!bar) return;
+    var inWeek = projectsInWeek(off);
+    if (!inWeek.length) { bar.innerHTML = ""; return; }
+
+    var st = summaryStaleCount(off);
+    var pending = st.missing + st.stale;
+    var label, cls, disabled = "";
+
+    if (st.generated === 0) {
+      label = AI_ICON + " AI Generate";
+      cls = "btn primary";
+    } else if (pending > 0) {
+      label = AI_ICON + " AI Refresh <span class='cntpill'>" + pending + "</span>";
+      cls = "btn primary";
+    } else {
+      label = CHECK_ICON + " AI up to date";
+      cls = "btn";
+      disabled = " disabled";
+    }
+
+    bar.innerHTML =
+      '<button class="' + cls + '" id="genAllBtn"' + disabled + '>' + label + "</button>" +
+      '<button class="btn" id="copyBtn">' + COPY_ICON + " Copy</button>" +
+      '<span class="toolnote" id="toolNote"></span>';
+
+    var note = $("toolNote");
+    if (note) {
+      note.textContent = st.generated === 0
+        ? "Notes copy fine without AI."
+        : (pending > 0
+            ? pending + " section" + (pending === 1 ? "" : "s") + " changed since generating"
+            : "Copy includes the AI text");
+    }
   }
 
   function noteHTML(x, opts) {
@@ -2084,16 +2176,24 @@
     var id = secId(pid);
     var st = sectionState(off, pid);
     var p = pid ? projects.filter(function (q) { return q.id === pid; })[0] : null;
-    var title = pid ? esc(p ? p.name : "Project") : "Overview";
-    var dot = pid && p ? '<span class="dot" style="background:' + p.color + '"></span>' : "";
     var busy = busySections[id];
     var sec = pid ? weekSummary(off).projects[pid] : weekSummary(off).overview;
     var when = sec && sec.generatedAt ? '<span class="secwhen">' + agoISO(sec.generatedAt) + "</span>" : "";
 
-    return dot + '<b>' + title + "</b>" + stateBadge(st) + when +
+    var title = pid
+      ? '<span class="dot" style="background:' + (p ? p.color : "var(--faint)") + '"></span><b>' + esc(p ? p.name : "Project") + "</b>"
+      : '<span class="ovlabel">' + AI_ICON + " Week overview</span>";
+
+    // "AI Generate" / "AI Refresh" rather than bare verbs: these are the only
+    // controls in the app that cost money and take seconds, and they should not
+    // read like the local, instant ones.
+    var btnLabel = busy ? '<span class="spin">' + AI_ICON + "</span> Working…"
+                        : AI_ICON + " AI " + (st.status === "none" ? "Generate" : "Refresh");
+
+    return title + stateBadge(st) + when +
       '<span class="secspacer"></span>' +
-      '<button class="minibtn" data-gen="' + (pid || "") + '"' + (busy ? " disabled" : "") + '>' +
-      (busy ? "…" : (st.status === "none" ? "Generate" : "Refresh")) + "</button>";
+      '<button class="minibtn aibtn' + (st.status === "stale" ? " wants" : "") + '" data-gen="' +
+      (pid || "") + '"' + (busy ? " disabled" : "") + ">" + btnLabel + "</button>";
   }
 
   function agoISO(iso) {
@@ -2120,7 +2220,8 @@
       body.innerHTML = mdToHtml(sec.text);
     } else {
       body.innerHTML = '<span class="placeholder">' +
-        (pid ? "Not generated yet." : "Not generated yet — this is the part people actually read.") +
+        (pid ? "No AI summary yet — the notes below are the record either way."
+             : "No AI overview yet. Optional; the per-project sections carry the detail.") +
         "</span>";
     }
   }
@@ -2153,33 +2254,6 @@
     }).join("") + "</ul>";
   }
 
-  function summaryBodyHtml(off) {
-    var inWeek = projectsInWeek(off);
-    if (!inWeek.length) {
-      return '<div class="set"><div class="empty">Nothing logged this week — nothing to summarise.</div></div>';
-    }
-
-    var html = '<div class="sumdoc">';
-
-    // Overview
-    html += '<section class="sumsec">' +
-      '<div class="sechead" id="sec-head-overview"></div>' +
-      '<div class="narrative secbody" id="sec-body-overview"></div>' +
-      "</section>";
-
-    inWeek.forEach(function (p) {
-      var id = secId(p.id);
-      html += '<section class="sumsec">' +
-        '<div class="sechead" id="sec-head-' + id + '"></div>' +
-        '<div class="narrative secbody" id="sec-body-' + id + '"></div>' +
-        '<div class="rawwrap"><div class="rawlabel">As entered</div>' +
-        '<div id="raw-' + id + '">' + rawNotesHtml(off, p.id) + "</div></div>" +
-        "</section>";
-    });
-
-    return html + "</div>";
-  }
-
   function paintAllSections(off) {
     paintSection(off, null);
     projectsInWeek(off).forEach(function (p) {
@@ -2187,10 +2261,7 @@
       var raw = document.getElementById("raw-" + secId(p.id));
       if (raw) raw.innerHTML = rawNotesHtml(off, p.id);
     });
-    var st = summaryStaleCount(off);
-    var btn = document.getElementById("genAllBtn");
-    if (btn) btn.textContent = st.missing + st.stale === 0 ? "Everything up to date"
-                             : (st.generated === 0 ? "Generate summary" : "Refresh " + (st.missing + st.stale) + " changed");
+    paintToolbar(off);
   }
 
   function summaryStaleCount(off) {
@@ -2236,16 +2307,6 @@
   }
   function closeModal() { $("overlay").classList.remove("open"); }
 
-  function openSummary() {
-    var off = offset;
-    openModal("Summary — " + fmtRange(off),
-      '<button class="btn primary" id="genAllBtn">Generate summary</button>' +
-      '<button class="btn" id="copyBtn">Copy</button>' +
-      '<button class="btn" id="copyListBtn">Copy notes only</button>' +
-      '<button class="btn" data-close>Close</button>', "",
-      summaryBodyHtml(off));
-    paintAllSections(off);
-  }
 
   function copyOut(text, msg) {
     if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -2478,7 +2539,6 @@
 
   $("mCapture").addEventListener("click", function () { setMode("capture"); });
   $("mSummarize").addEventListener("click", function () { setMode("summarize"); });
-  $("summaryBtn").addEventListener("click", openSummary);
   $("gearBtn").addEventListener("click", function () { openSettings("storage"); });
 
   /* ---------------- Global Hotkeys ---------------- */
@@ -2649,19 +2709,24 @@
       if (fn) fn();
       return;
     }
-    if (e.target.id === "copyBtn") { copyOut(summaryMarkdown(offset), "Summary copied"); return; }
-    if (e.target.id === "copyListBtn") { copyOut(buildMarkdown(offset), "Notes copied"); return; }
-    if (e.target.id === "genAllBtn") { generateAll(offset, summaryStaleCount(offset).generated > 0); return; }
+  });
 
-    // Per-section Generate / Refresh
+  /* Summary actions now live in the page, not the modal. */
+  $("summarizeView").addEventListener("click", function (e) {
+    if (e.target.closest("#copyBtn")) {
+      var hasAI = summaryStaleCount(offset).generated > 0;
+      copyOut(summaryMarkdown(offset), hasAI ? "Copied with AI summaries" : "Copied notes");
+      return;
+    }
+    if (e.target.closest("#genAllBtn")) {
+      generateAll(offset, summaryStaleCount(offset).generated > 0);
+      return;
+    }
     var genEl = e.target.closest("[data-gen]");
     if (genEl) {
       var pid = genEl.getAttribute("data-gen") || null;
-      generateSection(offset, pid).then(function () {
-        paintAllSections(offset);
-      }, function () {
-        paintAllSections(offset);
-      });
+      generateSection(offset, pid).then(function () { paintAllSections(offset); },
+                                        function () { paintAllSections(offset); });
       return;
     }
   });
