@@ -16,9 +16,11 @@ cd it-happened-this-week
 python3 -m http.server 8000
 ```
 
-Then open <http://localhost:8000/it-happened-this-week-mockup.html>.
+Then open <http://localhost:8000/>.
 
-**Serve it over http rather than opening the file directly.** Everything works from a `file://` URL except the AI summary — the Anthropic API rejects requests with a `null` origin. The app detects this and tells you, but it's easier to start the right way.
+**Serve it over http rather than opening the file directly.** Two things need it: the AI summary (the Anthropic API rejects a `null` origin) and the service worker, which is what makes the app work offline and installable. The app detects a `file://` origin and tells you, but it's easier to start the right way.
+
+The whole app is `index.html` — one file, no build step, no dependencies.
 
 ---
 
@@ -82,7 +84,9 @@ cd icons && python3 render.py && python3 make_ico.py
 
 `favicon.ico` carries optically-sized frames at 16, 32, 48, 64, 128 and 256px. **Below 24px the mark drops from four uprights to three** — five strokes across eleven pixels is a smudge, and a tally that reads as a smear isn't a tally. Everything else about the design stays constant.
 
-`manifest.webmanifest` makes the app installable, which is also what unlocks `Cmd+1`–`9` for project switching (a browser tab reserves those for itself; a standalone PWA window doesn't).
+`manifest.webmanifest` and `sw.js` make the app installable and offline-capable, which is also what unlocks `Cmd+1`–`9` for project switching (a browser tab reserves those for itself; a standalone PWA window doesn't).
+
+An alternate icon direction that wasn't shipped is kept in [`icons/alternates/`](./icons/alternates/), with a note on why.
 
 ## Known limits
 
