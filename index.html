@@ -239,7 +239,12 @@
   .robadge.show { display: inline; }
 
   /* ---- lists ---- */
-  h2.sec { font-size: 11px; text-transform: uppercase; letter-spacing: .09em; color: var(--faint); margin: 28px 0 10px; font-weight: 600; }
+  h2.sec { font-size: 11px; text-transform: uppercase; letter-spacing: .09em; color: var(--faint); margin: 28px 0 10px; font-weight: 600; display: flex; align-items: center; gap: 7px; }
+  /* The tally in the section header. Slightly smaller than the tile badges so
+     it sits with the uppercase label rather than shouting over it. */
+  .headtally { display: inline-flex; align-items: center; line-height: 0; }
+  .headtally .cnt { color: var(--faint); }
+  .headtally .cnt svg { display: block; overflow: visible; transform: scale(.86); transform-origin: left center; }
   .stats { font-size: 12.5px; color: var(--muted); margin-bottom: 12px; }
   .group { border-top: 1px solid var(--line); padding: 14px 0 6px; }
   .grouphead { display: flex; align-items: center; gap: 9px; margin-bottom: 8px; }
@@ -257,6 +262,7 @@
   .empty { color: var(--faint); font-size: 13.5px; padding: 16px 4px; }
 
   .actions { display: flex; gap: 8px; margin-top: 26px; flex-wrap: wrap; }
+  .actions-top { margin-top: 14px; margin-bottom: 4px; }
   .btn { border: 1px solid var(--line); background: var(--panel); color: var(--ink); font: inherit; font-size: 13px; padding: 8px 14px; border-radius: 8px; cursor: pointer; transition: border-color .12s, background .12s; }
   .btn:hover { border-color: var(--faint); }
   .btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 500; }
@@ -445,10 +451,15 @@
       </div>
       <button class="thisweek" id="thisWeekBtn" title="Return to current week (T)">↩ This week</button>
     </div>
-    <div id="weekBody"></div>
-    <div class="actions">
+
+    <!-- The reason you opened this tab. Above the week, not buried under it —
+         you shouldn't have to scroll past what you already know to reach the
+         thing you came to do. -->
+    <div class="actions actions-top">
       <button class="btn primary" id="summaryBtn">Generate summary</button>
     </div>
+
+    <div id="weekBody"></div>
   </div>
 
   <div class="foot">
@@ -501,21 +512,25 @@
       keyUrl: "https://console.anthropic.com/settings/keys",
       placeholder: "sk-ant-api03-…",
       models: [
-        ["claude-3-7-sonnet-latest", "Claude 3.7 Sonnet"],
-        ["claude-3-5-sonnet-20241022", "Claude 3.5 Sonnet"],
-        ["claude-3-5-haiku-20241022", "Claude 3.5 Haiku"],
-        ["claude-3-opus-20240229", "Claude 3 Opus"]
+        ["claude-sonnet-5", "Claude Sonnet 5"],
+        ["claude-opus-5", "Claude Opus 5"],
+        ["claude-haiku-4-5-20251001", "Claude Haiku 4.5"]
       ]
     },
     openai: {
-      name: "OpenAI (GPT-4o)",
+      name: "OpenAI (GPT)",
       keyHelp: "Get an OpenAI API key at platform.openai.com",
       keyUrl: "https://platform.openai.com/api-keys",
       placeholder: "sk-proj-…",
+      // Refreshed 2026-07-30 from developers.openai.com/api/docs/models.
+      // Caveat: we call /v1/chat/completions, and OpenAI now documents the
+      // GPT-5.6 family primarily against the Responses API. If one of these
+      // returns a 400 or 404 on chat/completions, use the custom-model field
+      // to try an older ID rather than assuming the key is bad.
       models: [
-        ["gpt-4o", "GPT-4o"],
-        ["gpt-4o-mini", "GPT-4o mini"],
-        ["o3-mini", "o3-mini"]
+        ["gpt-5.6-terra", "GPT-5.6 Terra (balanced)"],
+        ["gpt-5.6-sol", "GPT-5.6 Sol (most capable)"],
+        ["gpt-5.6-luna", "GPT-5.6 Luna (cheapest)"]
       ]
     },
     gemini: {
@@ -523,13 +538,55 @@
       keyHelp: "Get a Gemini API key at aistudio.google.com",
       keyUrl: "https://aistudio.google.com/app/apikey",
       placeholder: "AIzaSy…",
+      // Refreshed 2026-07-30 against ai.google.dev/gemini-api/docs/models.
+      // The previous list was entirely dead: gemini-2.0-flash and -flash-lite
+      // are shut down, and the 1.5 family is gone from the docs altogether.
+      // Google moves fast here — if a call starts failing with "no longer
+      // available", this list is the first thing to check.
       models: [
-        ["gemini-2.0-flash", "Gemini 2.0 Flash"],
-        ["gemini-1.5-pro", "Gemini 1.5 Pro"],
-        ["gemini-1.5-flash", "Gemini 1.5 Flash"]
+        ["gemini-3.6-flash", "Gemini 3.6 Flash"],
+        ["gemini-3.5-flash", "Gemini 3.5 Flash"],
+        ["gemini-3.5-flash-lite", "Gemini 3.5 Flash-Lite"],
+        ["gemini-2.5-flash", "Gemini 2.5 Flash"],
+        ["gemini-2.5-pro", "Gemini 2.5 Pro"]
       ]
     }
   };
+
+  /* Model IDs retired by their providers. A saved setting keeps pointing at a
+     dead model long after the app's list is updated, so the failure looks like
+     a bug in the app rather than a provider deprecation. Remap on load and say
+     so, rather than letting the next Polish fail with "no longer available". */
+  var RETIRED_MODELS = {
+    "gemini-2.0-flash":      "gemini-3.6-flash",
+    "gemini-2.0-flash-lite": "gemini-3.5-flash-lite",
+    "gemini-1.5-pro":        "gemini-2.5-pro",
+    "gemini-1.5-flash":      "gemini-2.5-flash",
+    "gpt-4o":                "gpt-5.6-terra",
+    "gpt-4o-mini":           "gpt-5.6-luna",
+    "o3-mini":               "gpt-5.6-luna",
+    "claude-3-7-sonnet-latest":   "claude-sonnet-5",
+    "claude-3-5-sonnet-20241022": "claude-sonnet-5",
+    "claude-3-5-haiku-20241022":  "claude-haiku-4-5-20251001",
+    "claude-3-opus-20240229":     "claude-opus-5"
+  };
+
+  function migrateRetiredModel() {
+    var was = settings.model;
+    if (!was || !RETIRED_MODELS[was]) return;
+    settings.model = RETIRED_MODELS[was];
+    // Persist immediately. Fixing it only in memory means the stale ID sits in
+    // storage and migrates again on every single launch.
+    try {
+      localStorage.setItem("ihtw:settings", JSON.stringify(settings));
+    } catch (e) {}
+    // Deferred: toast() and the DOM aren't ready this early in boot.
+    setTimeout(function () {
+      try {
+        toast(was + " was retired — switched to " + settings.model);
+      } catch (e) {}
+    }, 1200);
+  }
 
   function getProvider(model) {
     if (settings && settings.provider && PROVIDERS[settings.provider]) return settings.provider;
@@ -1129,7 +1186,9 @@
       .filter(function (x) { return x.projectId === currentProject.id; })
       .sort(function (a, b) { return new Date(b.createdAt) - new Date(a.createdAt); });
 
-    $("projHead").textContent = currentProject.name + " · this week" + (list.length ? " · " + list.length : "");
+    // Tally rather than a digit, matching the project tiles and the app icon.
+    $("projHead").innerHTML = esc(currentProject.name) + " · this week" +
+      (list.length ? ' <span class="headtally">' + tallyMark(list.length) + "</span>" : "");
 
     if (!list.length) {
       $("projList").innerHTML = '<div class="empty">Nothing logged for ' + esc(currentProject.name) +
@@ -1879,7 +1938,7 @@
 
       var providerOpts = [
         ["anthropic", "Anthropic (Claude)"],
-        ["openai", "OpenAI (GPT-4o)"],
+        ["openai", "OpenAI (GPT)"],
         ["gemini", "Google Gemini"]
       ];
 
@@ -1894,9 +1953,23 @@
             }).join('') + '</select>' +
             '<select class="ctl" data-set="model">' + provInfo.models.map(function (m) {
               return '<option value="' + m[0] + '"' + (settings.model === m[0] ? " selected" : "") + '>' + m[1] + '</option>';
-            }).join('') + '</select>' +
+            }).join('') +
+            // A model this app has never heard of — either typed below, or
+            // carried over from an older version. Show it rather than silently
+            // snapping the dropdown to something the user didn't choose.
+            (provInfo.models.some(function (m) { return m[0] === settings.model; })
+              ? ''
+              : '<option value="' + esc(settings.model) + '" selected>' + esc(settings.model) + ' (custom)</option>') +
+            '</select>' +
           '</div>' +
         '</div>' +
+
+        // These lists go stale fast — three provider lineups changed under this
+        // app in a single quarter. A free-text override means a dead model ID is
+        // a five-second fix instead of a code change.
+        '<div class="setrow"><span class="l">Custom model ID<small>Overrides the dropdown. Leave blank to use it.</small></span>' +
+          '<input class="ctl mono" data-set="model" value="' + esc(settings.model) + '" ' +
+          'placeholder="e.g. ' + esc(provInfo.models[0][0]) + '" spellcheck="false"></div>' +
 
         // 2. API Key second
         '<div class="setrow"><span class="l">API key (' + esc(provInfo.name) + ')<small>' +
@@ -2204,6 +2277,7 @@
       if (storedSettings) {
         var parsedSettings = JSON.parse(storedSettings);
         Object.assign(settings, parsedSettings);
+        migrateRetiredModel();
       }
     } catch (e) {}
 
