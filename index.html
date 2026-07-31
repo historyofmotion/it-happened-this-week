@@ -328,10 +328,17 @@
 
   /* ---- lists ---- */
   h2.sec { font-size: 11px; text-transform: uppercase; letter-spacing: .09em; color: var(--faint); margin: 28px 0 10px; font-weight: 600; display: flex; align-items: center; gap: 7px; }
-  /* The tally in the section header. Slightly smaller than the tile badges so
-     it sits with the uppercase label rather than shouting over it. */
+  /* The list of this week's updates is the point of Capture, not a footnote
+     under it — give it real heading weight instead of the quiet uppercase
+     label treatment other list headers use. */
+  #projHead {
+    font-size: 16px; text-transform: none; letter-spacing: 0;
+    color: var(--ink); font-weight: 650; margin-top: 22px;
+  }
+  /* The tally in the section header. Now the same weight as the tile badges —
+     it's the number that answers "do I need to update this."  */
   .headtally { display: inline-flex; align-items: center; line-height: 0; }
-  .headtally .cnt { color: var(--faint); }
+  .headtally .cnt { color: var(--accent); }
   .headtally .cnt svg { display: block; overflow: visible; transform: scale(.86); transform-origin: left center; }
   .stats { font-size: 12.5px; color: var(--muted); margin-bottom: 12px; }
   .group { border-top: 1px solid var(--line); padding: 14px 0 6px; }
