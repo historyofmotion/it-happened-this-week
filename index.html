@@ -1343,9 +1343,12 @@
   /* ---------------- Capture Mode Rendering ---------------- */
   function renderProjectNotes() {
     if (!currentProject) { $("projList").innerHTML = ""; return; }
+    // Oldest first — the list reads as the week accumulating, and a new note
+    // lands at the bottom where you just left the cursor rather than pushing
+    // everything else down.
     var list = weekNotes(0)
       .filter(function (x) { return x.projectId === currentProject.id; })
-      .sort(function (a, b) { return new Date(b.createdAt) - new Date(a.createdAt); });
+      .sort(function (a, b) { return new Date(a.createdAt) - new Date(b.createdAt); });
 
     // Tally rather than a digit, matching the project tiles and the app icon.
     $("projHead").innerHTML = esc(currentProject.name) + " · this week" +
