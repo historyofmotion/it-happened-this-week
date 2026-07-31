@@ -316,6 +316,13 @@
   /* AI buttons carry the sparkle and go quietly loud when a refresh is due. */
   .minibtn.aibtn { display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; }
   .minibtn.aibtn.wants { color: var(--accent); border-color: var(--accent); }
+  /* Square icon-only button, sized to match the AI button beside it. */
+  .minibtn.iconbtn-sm {
+    display: inline-flex; align-items: center; justify-content: center;
+    padding: 0; width: 26px; height: 24px; flex: 0 0 auto;
+  }
+  .minibtn.iconbtn-sm svg { margin: 0; }
+  .minibtn.iconbtn-sm:hover { color: var(--accent); border-color: var(--accent); }
   .spin { display: inline-block; animation: aispin 1.1s linear infinite; }
   @keyframes aispin { to { transform: rotate(360deg); } }
 
@@ -338,17 +345,28 @@
   .secbody li { margin: 3px 0; }
 
   .rawwrap { margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--line); }
+  /* Flex + centre so the tally sits on the label's optical centre rather than
+     hanging off its baseline. */
   .rawlabel {
+    display: flex; align-items: center; gap: 7px;
     font-size: 10px; text-transform: uppercase; letter-spacing: .09em;
-    color: var(--faint); font-weight: 600; margin-bottom: 6px;
+    color: var(--faint); font-weight: 600; margin-bottom: 6px; line-height: 1;
   }
+  .rawlabel .cnt { display: inline-flex; align-items: center; line-height: 0; color: var(--faint); }
+  .rawlabel .cnt svg { display: block; overflow: visible; transform: scale(.8); transform-origin: left center; }
+
   ul.rawnotes { list-style: none; margin: 0; padding: 0; }
   ul.rawnotes li {
     display: flex; align-items: flex-start; gap: 9px; padding: 4px 6px;
     font-size: 13.5px; border-radius: 6px; color: var(--muted);
   }
   ul.rawnotes li.changed { background: color-mix(in srgb, var(--warn) 9%, transparent); color: var(--ink); }
-  ul.rawnotes .rawstar { color: var(--accent); font-size: 11px; padding-top: 3px; flex: 0 0 auto; }
+  /* Star as the bullet: quiet by default, accent when the note is flagged. */
+  ul.rawnotes .rawstar {
+    color: var(--faint); font-size: 10px; padding-top: 4px; flex: 0 0 auto;
+    width: 11px; text-align: center; user-select: none;
+  }
+  ul.rawnotes .rawstar.on { color: var(--accent); font-size: 12px; padding-top: 3px; }
   ul.rawnotes .rawbody { flex: 1 1 auto; white-space: pre-wrap; overflow-wrap: anywhere; }
   ul.rawnotes .rawday { font-size: 11.5px; color: var(--faint); flex: 0 0 auto; padding-top: 1px; font-variant-numeric: tabular-nums; }
   .notemark {
@@ -1723,7 +1741,7 @@
 
     bar.innerHTML =
       '<button class="' + cls + '" id="genAllBtn"' + disabled + '>' + label + "</button>" +
-      '<button class="btn" id="copyBtn">' + COPY_ICON + " Copy</button>" +
+      '<button class="btn" id="copyBtn">' + COPY_ICON + " Copy All</button>" +
       '<span class="toolnote" id="toolNote"></span>';
 
     var note = $("toolNote");
@@ -2193,7 +2211,9 @@
     return title + stateBadge(st) + when +
       '<span class="secspacer"></span>' +
       '<button class="minibtn aibtn' + (st.status === "stale" ? " wants" : "") + '" data-gen="' +
-      (pid || "") + '"' + (busy ? " disabled" : "") + ">" + btnLabel + "</button>";
+      (pid || "") + '"' + (busy ? " disabled" : "") + ">" + btnLabel + "</button>" +
+      '<button class="minibtn iconbtn-sm" data-copysec="' + (pid || "overview") + '" ' +
+      'title="Copy just this section" aria-label="Copy this section">' + COPY_ICON + "</button>";
   }
 
   function agoISO(iso) {
@@ -2240,15 +2260,18 @@
 
     return '<ul class="rawnotes">' + items.map(function (x) {
       var lks = x.links && x.links.length ? x.links : (x.link ? [x.link] : []);
+      // Same link chip as Capture — one icon for one concept.
       var links = lks.map(function (lk) {
-        return '<a class="linkchip" href="' + esc(lk.url) + '" target="_blank" rel="noopener">⛓ ' +
-               esc(lk.label || domain(lk.url)) + "</a>";
+        return '<a class="linkchip" href="' + esc(lk.url) + '" target="_blank" rel="noopener">' +
+               LINK_ICON + " " + esc(lk.label || domain(lk.url)) + "</a>";
       }).join(" ");
       var mark = "";
       if (generated && addedSet[x.id])  mark = '<span class="notemark new">new</span>';
       else if (generated && editedSet[x.id]) mark = '<span class="notemark edited">edited</span>';
+      // The star is the bullet. Flagged notes get the accent; the rest sit
+      // quiet — so the list reads as a list, and highlights still stand out.
       return "<li" + (mark ? ' class="changed"' : "") + ">" +
-        (x.highlight ? '<span class="rawstar">★</span>' : "") +
+        '<span class="rawstar' + (x.highlight ? " on" : "") + '" aria-hidden="true">★</span>' +
         '<span class="rawbody">' + esc(x.body) + (links ? "<div>" + links + "</div>" : "") + "</span>" +
         '<span class="rawday">' + dayLabel(x.createdAt) + "</span>" + mark + "</li>";
     }).join("") + "</ul>";
@@ -2275,7 +2298,35 @@
     return { missing: missing, stale: stale, generated: generated };
   }
 
-  /* Markdown of the whole assembled document — what Copy produces. */
+  /* One section on its own, for pasting into the channel that cares about it.
+     No week heading — a project update dropped into #atlas doesn't need one. */
+  function sectionMarkdown(off, pid) {
+    var ws = weekSummary(off);
+
+    if (!pid) {
+      var ov = ws.overview;
+      return "**" + fmtRange(off) + "**\n\n" + (ov && ov.text ? ov.text.trim() : "");
+    }
+
+    var p = projects.filter(function (q) { return q.id === pid; })[0];
+    if (!p) return "";
+    var out = "**" + p.name + "** — " + fmtRange(off).replace("Week of ", "") + "\n";
+
+    var sec = ws.projects[pid];
+    if (sec && sec.text) out += "\n" + sec.text.trim() + "\n";
+
+    out += "\n";
+    projectNotes(off, pid).forEach(function (x) {
+      var lks = x.links && x.links.length ? x.links : (x.link ? [x.link] : []);
+      var linkStr = lks.map(function (lk) { return " — [" + (lk.label || domain(lk.url)) + "](" + lk.url + ")"; }).join("");
+      var d = new Date(x.createdAt);
+      out += "- " + x.body.replace(/\n/g, "\n  ") +
+             " (" + dayLabel(x.createdAt) + " " + MON[d.getMonth()] + " " + d.getDate() + ")" + linkStr + "\n";
+    });
+    return out.trimEnd();
+  }
+
+  /* Markdown of the whole assembled document — what Copy All produces. */
   function summaryMarkdown(off) {
     var ws = weekSummary(off);
     var out = "# " + fmtRange(off) + "\n";
@@ -2722,6 +2773,17 @@
       generateAll(offset, summaryStaleCount(offset).generated > 0);
       return;
     }
+    var copyEl = e.target.closest("[data-copysec]");
+    if (copyEl) {
+      var raw = copyEl.getAttribute("data-copysec");
+      var cpid = raw === "overview" ? null : raw;
+      var md = sectionMarkdown(offset, cpid);
+      if (!md.trim()) { toast("Nothing in that section yet"); return; }
+      var pname = cpid ? (projects.filter(function (q) { return q.id === cpid; })[0] || {}).name : "Overview";
+      copyOut(md, "Copied " + (pname || "section"));
+      return;
+    }
+
     var genEl = e.target.closest("[data-gen]");
     if (genEl) {
       var pid = genEl.getAttribute("data-gen") || null;
