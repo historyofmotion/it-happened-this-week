@@ -52,20 +52,18 @@
      degrades to a clean sans where it doesn't.
      =================================================================== */
   :root[data-theme="paper"] {
-    --bg: #f4efe2;            /* the desk */
-    --panel: #fdfaf1;         /* the sheet */
-    --ink: #2c2a25;           /* pencil */
-    --muted: #5f5b52;
-    --faint: #9b9385;
-    --line: #ded3bd;          /* ruled line */
-    --accent: #b03a20;        /* red pencil */
-    --accent-soft: #f7e9e0;
-    --past: #ece5d4;
-    --ok: #4a7c52;
-    --warn: #a8761f;
-    --shadow: 0 1px 1px rgba(80,66,40,.10), 0 6px 18px rgba(80,66,40,.10);
-    --hand: "Bradley Hand", "Segoe Print", "Chalkboard SE", "Comic Sans MS", ui-rounded, system-ui, sans-serif;
-    --paperline: rgba(120,142,168,.30);
+    --bg: #efe9dc;            /* the desk */
+    --panel: #fbf7ec;         /* the scrap */
+    --ink: #26241f;           /* text */
+    --muted: #45413a;         /* body text — dark enough to actually read */
+    --faint: #6f6a5e;         /* labels and dates only */
+    --line: #ddd3c0;
+    --accent: #a8391f;
+    --accent-soft: #f6e8e1;
+    --past: #e7e0d0;
+    --ok: #3d6b45;
+    --warn: #8f6415;
+    --shadow: 0 1px 1px rgba(80,66,40,.07), 0 4px 14px rgba(80,66,40,.09);
   }
 
   @media (prefers-color-scheme: dark) {
@@ -88,27 +86,22 @@
     --past: #f2efe9; --ok: #3f8f5f; --warn: #b8862c;
     --shadow: 0 1px 2px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.05);
   }
-  /* ---- paper theme surface treatment ---- */
+  /* ---- paper theme surface treatment ----
+     A scrap of paper, not a notebook. No ruling, no margin line, no
+     handwriting face. The warmth comes from the palette and a soft
+     uneven light across the sheet; everything else stays out of the way
+     of reading. */
 
-  /* Faint ruled lines across the desk, plus a paper grain. Both are pure
-     gradients — no image, nothing to fetch. */
   [data-theme="paper"] body {
     background-color: var(--bg);
+    /* Two very low-contrast washes so the surface isn't a flat slab. */
     background-image:
-      repeating-linear-gradient(transparent 0 27px, var(--paperline) 27px 28px),
-      radial-gradient(circle at 20% 12%, rgba(255,255,255,.55), transparent 55%),
-      radial-gradient(circle at 82% 78%, rgba(190,170,130,.14), transparent 50%);
+      radial-gradient(ellipse at 18% 6%, rgba(255,253,246,.55), transparent 60%),
+      radial-gradient(ellipse at 88% 92%, rgba(176,155,116,.10), transparent 55%);
     background-attachment: fixed;
   }
 
-  /* The margin rule down the left, like a school exercise book. */
-  [data-theme="paper"] .wrap { position: relative; }
-  [data-theme="paper"] .wrap::before {
-    content: ""; position: fixed; top: 0; bottom: 0; left: max(14px, calc(50% - 390px + 6px));
-    width: 1.5px; background: rgba(176,58,32,.22); pointer-events: none;
-  }
-
-  /* Sheets sit on the desk rather than being drawn on it. */
+  /* Sheets sit on the desk rather than being drawn onto it. */
   [data-theme="paper"] .capture,
   [data-theme="paper"] .projcard,
   [data-theme="paper"] .weekhead,
@@ -118,70 +111,16 @@
     box-shadow: var(--shadow);
   }
 
-  /* Hand-drawn edges: uneven corner radii read as "sketched", not "rendered". */
-  [data-theme="paper"] .projcard { border-radius: 14px 10px 15px 9px; }
-  [data-theme="paper"] .capture  { border-radius: 12px 15px 10px 13px; }
-  [data-theme="paper"] .tile     { border-radius: 11px 8px 12px 9px; }
-  [data-theme="paper"] .btn,
-  [data-theme="paper"] .minibtn  { border-radius: 9px 7px 10px 6px; }
-  [data-theme="paper"] .sumsec.overview { border-radius: 13px 10px 14px 11px; }
+  /* Corners a touch uneven — a cut edge rather than a drawn one. Small
+     enough that you feel it before you notice it. */
+  [data-theme="paper"] .projcard { border-radius: 12px 10px 13px 10px; }
+  [data-theme="paper"] .capture  { border-radius: 11px 12px 10px 11px; }
+  [data-theme="paper"] .sumsec.overview { border-radius: 12px 10px 12px 11px; }
 
-  /* Casual voice on the labels and chrome. Note bodies stay in the reading
-     face — a status note you actually have to read is the wrong place to be
-     clever about type. */
-  [data-theme="paper"] .brand .word,
-  [data-theme="paper"] h2.sec,
-  [data-theme="paper"] .rawlabel,
-  [data-theme="paper"] .secbadge,
-  [data-theme="paper"] .notemark,
-  [data-theme="paper"] .ovlabel,
-  [data-theme="paper"] .modes button,
-  [data-theme="paper"] .sechead b,
-  [data-theme="paper"] .weeklabel,
-  [data-theme="paper"] .toolnote,
-  [data-theme="paper"] .btn,
-  [data-theme="paper"] .minibtn {
-    font-family: var(--hand);
-    letter-spacing: .01em;
-  }
-  [data-theme="paper"] .brand .word { letter-spacing: .06em; font-size: 13px; }
-  [data-theme="paper"] .sechead b { font-size: 16px; }
-  [data-theme="paper"] h2.sec,
-  [data-theme="paper"] .rawlabel,
-  [data-theme="paper"] .ovlabel { text-transform: none; letter-spacing: .02em; font-size: 12px; }
-  [data-theme="paper"] .secbadge,
-  [data-theme="paper"] .notemark { text-transform: none; letter-spacing: 0; font-size: 11px; }
-
-  /* Notes sit on ruled lines inside each card. */
-  [data-theme="paper"] ul.rawnotes li {
-    background-image: linear-gradient(transparent calc(100% - 1px), var(--line) 0);
-    background-repeat: no-repeat;
-    background-size: 100% 100%;
-    border-radius: 0;
-  }
-  [data-theme="paper"] ul.rawnotes li.changed {
-    background-color: rgba(168,118,31,.10);
-    border-radius: 4px;
-  }
-  [data-theme="paper"] .rawstar { font-size: 11px; }
-
-  /* Ink-on-paper rather than UI-blue for the AI prose. */
-  [data-theme="paper"] .secbody { color: #33303a; }
+  /* Body text is text. Only dates and small labels get to be quiet. */
+  [data-theme="paper"] ul.rawnotes li { color: var(--ink); }
+  [data-theme="paper"] .secbody { color: var(--ink); }
   [data-theme="paper"] .narrative p { margin-bottom: 9px; }
-
-  /* The capture field is where you scribble — give it the hand. */
-  [data-theme="paper"] #noteInput { font-family: var(--hand); font-size: 16px; }
-  [data-theme="paper"] #noteInput::placeholder { font-family: var(--hand); }
-
-  [data-theme="paper"] .btn.primary { box-shadow: 0 1px 0 rgba(120,40,20,.35); }
-  [data-theme="paper"] .foot { font-family: var(--hand); }
-
-  @media (prefers-reduced-motion: no-preference) {
-    /* A sheet that's been set down slightly askew. Tiny — enough to feel
-       casual, not enough to look broken. */
-    [data-theme="paper"] .projcard:nth-child(odd)  { transform: rotate(-.16deg); }
-    [data-theme="paper"] .projcard:nth-child(even) { transform: rotate(.13deg); }
-  }
 
   * { box-sizing: border-box; }
   body {

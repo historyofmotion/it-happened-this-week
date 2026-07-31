@@ -92,14 +92,14 @@ An alternate icon direction that wasn't shipped is kept in [`icons/alternates/`]
 
 Three themes: **Paper** (the default), Light and Dark.
 
-Paper is a warm ruled sheet with a margin rule, hand-drawn borders and a
-red-pencil accent — a week of scrappy notes shouldn't look like a CRM. It uses
-only fonts already on the machine; pulling a webfont would put a network
-dependency inside an app whose whole promise is that it works offline, so the
-casual voice degrades to a clean sans where those faces don't exist.
+Paper is a warm off-white surface with soft shadows and slightly uneven corners —
+a scrap of paper rather than a notebook page. No ruling, no margin line, no
+handwriting face: the warmth is in the palette, and everything else stays out of
+the way of reading.
 
-Note bodies deliberately stay in the reading face. A status note you actually
-have to read is the wrong place to be clever about type.
+Body text is checked against WCAG rather than eyeballed. Note text sits at 14.5:1
+on the sheet; only dates and small labels are allowed to go quiet, and those
+still clear AA.
 
 ## Known limits
 
