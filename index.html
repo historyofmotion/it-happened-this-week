@@ -196,14 +196,15 @@
     font-size: 11px; font-variant-numeric: tabular-nums; line-height: 15px;
     border-radius: 20px; padding: 1px 6px; background: var(--bg);
   }
-  /* Same treatment as the Capture/Summarize toggle: solid accent fill, white
-     text. One selection convention for the whole app instead of two. */
-  .tile.on { border-color: var(--accent); background: var(--accent); color: #fff; }
-  .tile.on .dot { opacity: 1; box-shadow: 0 0 0 1px rgba(255,255,255,.6); }
-  .tile.on .kb { color: #fff; border-color: rgba(255,255,255,.55); }
-  .tile.on .cnt { color: #fff; }
-  .tile.on .cnt.zero { color: #fff; }
-  .tile.on .cnt.many { background: rgba(255,255,255,.25); color: #fff; }
+  /* Same accent as the Capture/Summarize toggle, but a tint rather than a
+     solid fill — a whole row of solid-orange tiles was louder than a single
+     two-button toggle can get away with. */
+  .tile.on { border-color: var(--accent); background: var(--accent-soft); }
+  .tile.on .dot { opacity: 1; }
+  .tile.on .kb { color: var(--accent); border-color: var(--accent); }
+  .tile.on .cnt { color: var(--accent); }
+  .tile.on .cnt.zero { color: var(--warn); }
+  .tile.on .cnt.many { background: var(--panel); color: var(--ink); }
   .tile.add { color: var(--muted); border-style: dashed; }
   .tile.add:hover { color: var(--accent); border-color: var(--accent); }
   #newProjInput {
