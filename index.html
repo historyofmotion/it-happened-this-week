@@ -196,12 +196,14 @@
     font-size: 11px; font-variant-numeric: tabular-nums; line-height: 15px;
     border-radius: 20px; padding: 1px 6px; background: var(--bg);
   }
-  .tile.on { border-color: var(--accent); background: var(--accent-soft); }
-  .tile.on .dot { opacity: 1; }
-  .tile.on .kb { color: var(--accent); border-color: var(--accent); }
-  .tile.on .cnt { color: var(--accent); }
-  .tile.on .cnt.zero { color: var(--warn); }
-  .tile.on .cnt.many { background: var(--panel); color: var(--ink); }
+  /* Same treatment as the Capture/Summarize toggle: solid accent fill, white
+     text. One selection convention for the whole app instead of two. */
+  .tile.on { border-color: var(--accent); background: var(--accent); color: #fff; }
+  .tile.on .dot { opacity: 1; box-shadow: 0 0 0 1px rgba(255,255,255,.6); }
+  .tile.on .kb { color: #fff; border-color: rgba(255,255,255,.55); }
+  .tile.on .cnt { color: #fff; }
+  .tile.on .cnt.zero { color: #fff; }
+  .tile.on .cnt.many { background: rgba(255,255,255,.25); color: #fff; }
   .tile.add { color: var(--muted); border-style: dashed; }
   .tile.add:hover { color: var(--accent); border-color: var(--accent); }
   #newProjInput {
@@ -999,7 +1001,7 @@
       idbClearStore("notes");
       notes.forEach(function (x) {
         idbPut("notes", null, {
-          id: x.id, projectId: x.projectId, body: x.body, link: x.link,
+          id: x.id, projectId: x.projectId, body: x.body, links: x.links || [],
           highlight: !!x.highlight, createdAt: new Date(x.createdAt).toISOString(),
           weekKey: x.weekKey, source: x.source || "type",
           updatedAt: x.updatedAt || new Date().toISOString()
@@ -1025,7 +1027,7 @@
       projects: projects,
       notes: notes.map(function (x) {
         return {
-          id: x.id, projectId: x.projectId, body: x.body, link: x.link,
+          id: x.id, projectId: x.projectId, body: x.body, links: x.links || [],
           highlight: !!x.highlight, createdAt: new Date(x.createdAt).toISOString(),
           weekKey: x.weekKey, source: x.source || "type",
           updatedAt: x.updatedAt || new Date().toISOString()
@@ -1049,8 +1051,12 @@
       return { id: p.id, name: p.name, color: p.color, archived: !!p.archived, sortOrder: p.sortOrder !== undefined ? p.sortOrder : idx };
     });
     notes = doc.notes.map(function (x) {
+      // Older files (and the old IndexedDB shape) stored a single `link`
+      // object instead of a `links` array. Fold it in on the way back so
+      // nothing saved under the old shape silently disappears.
+      var links = x.links && x.links.length ? x.links : (x.link ? [x.link] : []);
       return {
-        id: x.id, projectId: x.projectId, body: x.body, link: x.link || null,
+        id: x.id, projectId: x.projectId, body: x.body, links: links,
         highlight: !!x.highlight, createdAt: new Date(x.createdAt), weekKey: x.weekKey,
         source: x.source || "type", updatedAt: x.updatedAt || new Date().toISOString()
       };
