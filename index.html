@@ -285,6 +285,28 @@
   .prow:hover .pdel { opacity: 1; }
   .prow .pdel:hover { color: var(--accent); }
 
+  /* Just saved or just edited: a soft rise, a brief hold so the eye can find
+     it, then a slow fade back to the page. Long enough to follow, short
+     enough not to sit there pulsing at you. */
+  @keyframes justsaved {
+    0%   { background-color: transparent;      border-left-color: transparent; }
+    9%   { background-color: var(--accent-soft); border-left-color: var(--accent); }
+    38%  { background-color: var(--accent-soft); border-left-color: var(--accent); }
+    100% { background-color: transparent;      border-left-color: transparent; }
+  }
+  .prow.justsaved {
+    border-left: 2px solid transparent;
+    animation: justsaved 2.2s ease-out 1;
+  }
+  /* Same signal without the movement: hold the tint, no animation. */
+  @media (prefers-reduced-motion: reduce) {
+    .prow.justsaved {
+      animation: none;
+      background-color: var(--accent-soft);
+      border-left-color: var(--accent);
+    }
+  }
+
   .hint { font-size: 11.5px; color: var(--faint); margin: 9px 2px 0; display: flex; gap: 14px; flex-wrap: wrap; }
   kbd { font: inherit; font-size: 10.5px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 4px; color: var(--muted); background: var(--panel); }
 
@@ -1340,6 +1362,17 @@
   }
 
   /* ---------------- Capture Mode Rendering ---------------- */
+  /* Which row to flash after the next render. Cleared on a timer so that an
+     unrelated re-render — switching weeks, editing settings — doesn't replay
+     the animation on a note you saved five minutes ago. */
+  var justSavedId = null, justSavedTimer = null;
+
+  function flagJustSaved(id) {
+    justSavedId = id;
+    clearTimeout(justSavedTimer);
+    justSavedTimer = setTimeout(function () { justSavedId = null; }, 2600);
+  }
+
   function renderProjectNotes() {
     if (!currentProject) { $("projList").innerHTML = ""; return; }
     // Oldest first — the list reads as the week accumulating, and a new note
@@ -1366,7 +1399,8 @@
                LINK_ICON + ' ' + esc(lk.label || domain(lk.url)) + '</a>';
       }).join('');
       var linkBlock = linkHtml ? '<div>' + linkHtml + '</div>' : '';
-      return '<div class="prow' + (editingId === x.id ? ' iscur' : '') + '" data-edit="' + x.id + '">' +
+      return '<div class="prow' + (editingId === x.id ? ' iscur' : '') +
+        (justSavedId === x.id ? ' justsaved' : '') + '" data-edit="' + x.id + '">' +
         '<span class="pidx" title="Update ' + (i + 1) + '" aria-label="Update ' + (i + 1) + '">' +
           tallyMark(i + 1) +
         '</span>' +
@@ -1554,6 +1588,7 @@
           x.updatedAt = new Date().toISOString();
         }
       });
+      flagJustSaved(editingId);
       endEdit(true);
       renderTiles(); renderProjectNotes(); persist();
       toast("Updated");
@@ -1561,8 +1596,9 @@
       return;
     }
 
+    var newId = "n" + (++uid);
     notes.push({
-      id: "n" + (++uid),
+      id: newId,
       projectId: currentProject.id,
       body: body,
       links: links,
@@ -1571,6 +1607,7 @@
       source: "type",
       updatedAt: new Date().toISOString()
     });
+    flagJustSaved(newId);
     settings.lastProjectId = currentProject.id;
     input.value = "";
     clearAllLinks();
