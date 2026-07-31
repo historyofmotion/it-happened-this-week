@@ -88,6 +88,19 @@ cd icons && python3 render.py && python3 make_ico.py
 
 An alternate icon direction that wasn't shipped is kept in [`icons/alternates/`](./icons/alternates/), with a note on why.
 
+## Theme
+
+Three themes: **Paper** (the default), Light and Dark.
+
+Paper is a warm ruled sheet with a margin rule, hand-drawn borders and a
+red-pencil accent — a week of scrappy notes shouldn't look like a CRM. It uses
+only fonts already on the machine; pulling a webfont would put a network
+dependency inside an app whose whole promise is that it works offline, so the
+casual voice degrades to a clean sans where those faces don't exist.
+
+Note bodies deliberately stay in the reading face. A status note you actually
+have to read is the wrong place to be clever about type.
+
 ## Known limits
 
 - **No global hotkey.** A web page can't register one. Install as a PWA and bind an OS shortcut to the window; a browser extension is planned. If a true global hotkey is non-negotiable, this wants to be a desktop app.
