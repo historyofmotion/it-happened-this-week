@@ -2672,21 +2672,35 @@
       var mlp = modLabel();
       var live = 0;
       var sortedProj = projects.slice().sort(function (a, b) { return (a.sortOrder || 0) - (b.sortOrder || 0); });
+      var archivedCount = sortedProj.filter(function (p) { return p.archived; }).length;
+      var visibleProj = showArchivedProjects
+        ? sortedProj
+        : sortedProj.filter(function (p) { return !p.archived; });
+
+      var listHtml = visibleProj.map(function (p, i) {
+        var count = notes.filter(function (x) { return x.projectId === p.id; }).length;
+        var badge = "";
+        if (!p.archived) { live++; badge = (mlp && live <= 9) ? "<kbd>" + mlp + live + "</kbd>" : ""; }
+        return '<div class="projrow' + (p.archived ? " arch" : "") + '">' +
+          '<button class="swatch" data-color="' + p.id + '" style="background:' + p.color + '" title="Recolor"></button>' +
+          (badge || '<span style="width:26px;flex:0 0 auto"></span>') +
+          '<input class="pname" data-rename="' + p.id + '" value="' + esc(p.name) + '">' +
+          '<em style="color:var(--faint);font-size:11.5px;flex:0 0 auto">' + count + "</em>" +
+          '<button class="minibtn" data-move="up:' + p.id + '" ' + (i === 0 ? "disabled" : "") + ' title="Move up">↑</button>' +
+          '<button class="minibtn" data-move="down:' + p.id + '" ' + (i === visibleProj.length - 1 ? "disabled" : "") + ' title="Move down">↓</button>' +
+          '<button class="minibtn danger" data-arch="' + p.id + '">' + (p.archived ? "Restore" : "Archive") + "</button>" +
+          "</div>";
+      }).join("");
+
+      var toggleArchivedBtn = archivedCount > 0
+        ? '<div style="margin-top:10px"><button class="minibtn" data-toggle-archived>' +
+          (showArchivedProjects ? "Hide archived projects" : "Show archived projects (" + archivedCount + ")") +
+          '</button></div>'
+        : '';
+
       return '<div class="set"><h4>Projects</h4><p class="sub">Project order determines capture tile order and number shortcuts. Click a name to rename, swatch to recolor.</p>' +
-        sortedProj.map(function (p, i) {
-          var count = notes.filter(function (x) { return x.projectId === p.id; }).length;
-          var badge = "";
-          if (!p.archived) { live++; badge = (mlp && live <= 9) ? "<kbd>" + mlp + live + "</kbd>" : ""; }
-          return '<div class="projrow' + (p.archived ? " arch" : "") + '">' +
-            '<button class="swatch" data-color="' + p.id + '" style="background:' + p.color + '" title="Recolor"></button>' +
-            (badge || '<span style="width:26px;flex:0 0 auto"></span>') +
-            '<input class="pname" data-rename="' + p.id + '" value="' + esc(p.name) + '">' +
-            '<em style="color:var(--faint);font-size:11.5px;flex:0 0 auto">' + count + "</em>" +
-            '<button class="minibtn" data-move="up:' + p.id + '" ' + (i === 0 ? "disabled" : "") + ' title="Move up">↑</button>' +
-            '<button class="minibtn" data-move="down:' + p.id + '" ' + (i === sortedProj.length - 1 ? "disabled" : "") + ' title="Move down">↓</button>' +
-            '<button class="minibtn danger" data-arch="' + p.id + '">' + (p.archived ? "Restore" : "Archive") + "</button>" +
-            "</div>";
-        }).join("") +
+        listHtml +
+        toggleArchivedBtn +
         '<div style="margin-top:14px;display:flex;gap:8px;align-items:center">' +
           '<input class="ctl" id="setNewProj" placeholder="New project name…">' +
           '<button class="btn sm" data-addproj>Add</button></div>' +
@@ -2943,9 +2957,18 @@
     }
   });
 
+  var showArchivedProjects = false;
+
   $("overlay").addEventListener("click", function (e) {
     if (e.target === $("overlay")) { closeModal(); return; }
     if (e.target.closest("[data-close]")) { closeModal(); return; }
+
+    var toggleArch = e.target.closest("[data-toggle-archived]");
+    if (toggleArch) {
+      showArchivedProjects = !showArchivedProjects;
+      openSettings("projects");
+      return;
+    }
 
     var tab = e.target.closest("[data-tab]");
     if (tab) { openSettings(tab.getAttribute("data-tab")); return; }
