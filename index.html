@@ -248,27 +248,15 @@
   .savebtn { flex: 0 0 auto; border: 0; background: var(--accent); color: #fff; font: inherit; font-size: 13px; font-weight: 500; padding: 7px 14px; border-radius: 8px; cursor: pointer; transition: opacity .15s; }
   .savebtn:disabled { opacity: .3; cursor: default; }
 
-  /* live link chips in the capture box */
-  .linkchips-area {
-    display: flex; flex-direction: column; gap: 6px; margin: 8px 4px 2px;
+  /* inline markdown links */
+  .inlinelink {
+    display: inline-flex; align-items: center; gap: 3px;
+    color: var(--accent); text-decoration: underline; text-decoration-thickness: 1px;
+    text-underline-offset: 2.5px; font-weight: 500; word-break: break-word;
+    transition: color .15s, text-decoration-color .15s;
   }
-  .linkchip-live {
-    display: flex; align-items: center; gap: 8px;
-    background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 6px 9px; font-size: 12.5px;
-  }
-  .linkchip-live .ic { color: var(--muted); flex: 0 0 auto; display: inline-flex; align-items: center; }
-  .linkchip-live input {
-    border: 0; border-bottom: 1px dashed var(--line); background: transparent; color: var(--ink);
-    font: inherit; font-size: 12.5px; outline: none; padding: 1px 2px; flex: 0 0 auto; width: 120px;
-  }
-  .linkchip-live input.url-edit {
-    font: 11.5px ui-monospace, Menlo, monospace; color: var(--muted);
-    flex: 1 1 auto; width: 0; min-width: 60px;
-  }
-  .linkchip-live input:focus { border-bottom-color: var(--accent); }
-  .linkchip-live input::placeholder { color: var(--faint); }
-  .linkchip-live .x { border: 0; background: none; color: var(--faint); cursor: pointer; font-size: 15px; padding: 0 2px; flex: 0 0 auto; }
-  .linkchip-live .x:hover { color: var(--accent); }
+  .inlinelink:hover { color: var(--ink); text-decoration-color: var(--ink); }
+  .inlinelink svg { display: inline-block; vertical-align: baseline; margin-left: 1px; flex: 0 0 auto; }
 
   /* editing an existing note */
   .editbar {
@@ -364,8 +352,6 @@
   .note .star.on { color: var(--accent); }
   .note .body { flex: 1 1 auto; min-width: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
   .note .day { font-size: 11.5px; color: var(--faint); flex: 0 0 auto; padding-top: 2px; font-variant-numeric: tabular-nums; }
-  .linkchip { display: inline-flex; align-items: center; gap: 5px; margin-top: 4px; font-size: 11.5px; color: var(--muted); border: 1px solid var(--line); border-radius: 20px; padding: 1px 8px; text-decoration: none; background: var(--bg); }
-  .linkchip:hover { border-color: var(--accent); color: var(--accent); }
   .empty { color: var(--faint); font-size: 13.5px; padding: 16px 4px; }
 
   .actions { display: flex; gap: 8px; margin-top: 26px; flex-wrap: wrap; }
@@ -629,7 +615,6 @@
         <button class="iconbtn" id="micBtn" title="Dictate (M)" aria-label="Dictate note">●</button>
         <button class="savebtn" id="saveBtn" disabled>Save</button>
       </div>
-      <div class="linkchips-area" id="linkChipsArea"></div>
     </div>
 
     <div class="hint">
@@ -637,7 +622,7 @@
       <span><kbd>Enter</kbd> save</span>
       <span><kbd>⇧Enter</kbd> new line</span>
       <span id="hintMic"><kbd id="hintMicKey">M</kbd> dictate</span>
-      <span>paste URLs to attach links</span>
+      <span>paste URLs to auto-retrieve titles</span>
     </div>
 
     <h2 class="sec" id="projHead">This week</h2>
@@ -827,13 +812,30 @@
   function dayIn(off, i) { return new Date(thisWeek.getTime() + off * WEEK_MS + i * 24 * 3600 * 1000); }
 
   var uid = 0;
+  function generateUniqueId() {
+    return "n" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  }
+
+  function deduplicateNoteIds() {
+    var seen = {};
+    notes.forEach(function (x) {
+      if (!x.id || seen[x.id]) {
+        x.id = generateUniqueId();
+      }
+      seen[x.id] = true;
+    });
+  }
+
   var L = function (u, l) { return { url: u, label: l }; };
   function createDemoNote(off, d, pid, body, hi, link) {
+    var b = body;
+    if (link && link.url) {
+      b += " [" + (link.label || domain(link.url)) + "](" + link.url + ")";
+    }
     return {
-      id: "n" + (++uid),
+      id: generateUniqueId(),
       projectId: pid,
-      body: body,
-      link: link || null,
+      body: b,
       highlight: !!hi,
       createdAt: dayIn(off, d),
       updatedAt: new Date().toISOString()
@@ -1377,8 +1379,10 @@
   function selectProject(p, announce) {
     if (currentProject && p.id === currentProject.id) { $("noteInput").focus(); return; }
     if (editingId) {
-      if (!confirm("You're editing a note in " + currentProject.name +
-                   ".\n\nDiscard those changes and switch to " + p.name + "?")) return;
+      if (isEditModified()) {
+        if (!confirm("You're editing a note in " + currentProject.name +
+                     ".\n\nDiscard those changes and switch to " + p.name + "?")) return;
+      }
       endEdit(true);
     }
     currentProject = p;
@@ -1437,46 +1441,85 @@
     }
     // list is sorted newest-first; tally mark shows position (1 = top = most recent)
     $("projList").innerHTML = list.map(function (x, i) {
-      var links = x.links && x.links.length ? x.links : (x.link ? [x.link] : []);
-      var linkHtml = links.map(function (lk) {
-        return '<a class="linkchip" href="' + esc(lk.url) + '" target="_blank" rel="noopener">' +
-               LINK_ICON + ' ' + esc(lk.label || domain(lk.url)) + '</a>';
-      }).join('');
-      var linkBlock = linkHtml ? '<div>' + linkHtml + '</div>' : '';
       return '<div class="prow' + (editingId === x.id ? ' iscur' : '') +
         (justSavedId === x.id ? ' justsaved' : '') + '" data-edit="' + x.id + '">' +
         '<span class="pidx" title="Update ' + (i + 1) + '" aria-label="Update ' + (i + 1) + '">' +
           tallyMark(i + 1) +
         '</span>' +
-        // No star here. Highlighting is a decision about the report, so it
-        // belongs in Summarize; Capture is for getting the note down.
-        '<span class="pbody">' + esc(x.body) + linkBlock + '</span>' +
+        '<span class="pbody">' + renderNoteBody(x.body, x.links || (x.link ? [x.link] : [])) + '</span>' +
         '<span class="pday">' + dayLabel(x.createdAt) + '</span>' +
         '<button class="pdel" data-pdel="' + x.id + '" title="Delete this note" aria-label="Delete note">&times;</button>' +
         '</div>';
     }).join('');
   }
 
+  function renderNoteBody(bodyText, legacyLinks) {
+    if (!bodyText) bodyText = "";
+    var html = esc(bodyText);
+
+    // Convert markdown links [Label](url) to styled inline links
+    html = html.replace(/\[([^\]]+)\]\((https?:\/\/[^\s\)]+)\)/g, function (_, label, url) {
+      return '<a class="inlinelink" href="' + esc(url) + '" target="_blank" rel="noopener">' +
+             esc(label) + ' ' + LINK_ICON + '</a>';
+    });
+
+    // Convert raw standalone URLs (not in [label](url)) to styled inline links
+    html = html.replace(/(^|[\s(])(https?:\/\/[^\s<)]+)/g, function (_, prefix, url) {
+      return prefix + '<a class="inlinelink" href="' + esc(url) + '" target="_blank" rel="noopener">' +
+             esc(domain(url)) + ' ' + LINK_ICON + '</a>';
+    });
+
+    // Handle legacy attached links array
+    var links = legacyLinks && legacyLinks.length ? legacyLinks : [];
+    if (links.length) {
+      links.forEach(function (lk) {
+        if (lk.url && html.indexOf(lk.url) === -1) {
+          html += ' <a class="inlinelink" href="' + esc(lk.url) + '" target="_blank" rel="noopener">' +
+                  esc(lk.label || domain(lk.url)) + ' ' + LINK_ICON + '</a>';
+        }
+      });
+    }
+
+    return html.replace(/\n/g, "<br>");
+  }
+
   /* ---- Note Editing ---- */
-  function hasUnsavedInput() { return !!($("noteInput").value.trim() || pendingLinks.length); }
+  var editingInitialText = null;
+
+  function isEditModified() {
+    if (!editingId) return false;
+    return $("noteInput").value !== editingInitialText;
+  }
+
+  function hasUnsavedInput() { return !!($("noteInput").value.trim()); }
 
   function beginEdit(id) {
     var x = notes.filter(function (q) { return q.id === id; })[0];
     if (!x) return;
 
     if (editingId && editingId !== id) {
-      if (!confirm("You're editing another note.\n\nDiscard those changes and edit this one instead?")) return;
+      if (isEditModified()) {
+        if (!confirm("You have unsaved changes to this note.\n\nDiscard those changes and edit this one instead?")) return;
+      }
     } else if (!editingId && hasUnsavedInput()) {
-      var unsaved = ($("noteInput").value.trim() || (pendingLinks.length ? domain(pendingLinks[0].url) : "")).replace(/\s*\n+\s*/g, " ");
+      var unsaved = $("noteInput").value.trim().replace(/\s*\n+\s*/g, " ");
       if (unsaved.length > 80) unsaved = unsaved.slice(0, 78) + "…";
-      if (!confirm("You have unsaved text in the box above:\n\n“" + unsaved +
-                   "”\n\nDiscard it and edit this note instead?")) return;
+      if (!confirm("You have unsaved text in the box above:\n\n“" + unsaved + "”\n\nDiscard it and edit this note instead?")) return;
     }
 
     editingId = id;
-    $("noteInput").value = x.body;
-    pendingLinks = x.links ? x.links.slice() : (x.link ? [{ url: x.link.url, label: x.link.label || "" }] : []);
-    renderLinkChips();
+    var text = x.body || "";
+    var links = x.links && x.links.length ? x.links : (x.link ? [x.link] : []);
+    if (links.length) {
+      links.forEach(function (lk) {
+        if (lk.url && text.indexOf(lk.url) === -1) {
+          text += " [" + (lk.label || domain(lk.url)) + "](" + lk.url + ")";
+        }
+      });
+    }
+
+    editingInitialText = text;
+    $("noteInput").value = text;
     $("editBar").classList.add("open");
     $("editBarTxt").textContent = "Editing note from " + dayLabel(x.createdAt) + " — Enter updates it, Esc cancels";
     $("captureBox").classList.add("editing");
@@ -1491,10 +1534,11 @@
 
   function endEdit(clearField) {
     editingId = null;
+    editingInitialText = null;
     $("editBar").classList.remove("open");
     $("captureBox").classList.remove("editing");
     $("saveBtn").textContent = "Save";
-    if (clearField) { $("noteInput").value = ""; clearAllLinks(); autoGrow(); }
+    if (clearField) { $("noteInput").value = ""; autoGrow(); }
     refreshSave();
     renderProjectNotes();
   }
@@ -1511,129 +1555,154 @@
     toast("Deleted");
   }
 
-  /* ---------------- Multi-Link Attachment ---------------- */
-  /* SVG external-link icon reused for link chips */
+  /* ---------------- Inline Links & Title Retrieval ---------------- */
   var LINK_ICON = '<svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 2H2a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h7a1 1 0 0 0 1-1V7"/><polyline points="8 1 11 1 11 4"/><line x1="11" y1="1" x2="5.5" y2="6.5"/></svg>';
-
-  // A four-point sparkle. Used everywhere the model is involved, and nowhere
-  // else — so "this button spends a request" is legible at a glance.
-  var AI_ICON = '<svg class="aiglyph" width="13" height="13" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">' +
-    '<path d="M8 0.6l1.5 4.2 4.2 1.5-4.2 1.5L8 12l-1.5-4.2L2.3 6.3l4.2-1.5z"/>' +
-    '<path d="M13 9.6l.7 1.9 1.9.7-1.9.7-.7 1.9-.7-1.9-1.9-.7 1.9-.7z" opacity=".65"/></svg>';
-
-  // Circular double-arrow refresh icon for buttons needing generation or refresh.
-  var RED_REFRESH_ICON = '<svg class="refresh-icon" width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
-    '<path d="M13.5 2.5v4h-4"/><path d="M2.5 13.5v-4h4"/><path d="M2.8 6a6 6 0 0 1 9.7-2.1L13.5 6"/><path d="M13.2 10a6 6 0 0 1-9.7 2.1L2.5 10"/>' +
-  '</svg>';
-
+  var AI_ICON = '<svg class="aiglyph" width="13" height="13" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0.6l1.5 4.2 4.2 1.5-4.2 1.5L8 12l-1.5-4.2L2.3 6.3l4.2-1.5z"/><path d="M13 9.6l.7 1.9 1.9.7-1.9.7-.7 1.9-.7-1.9-1.9-.7 1.9-.7z" opacity=".65"/></svg>';
+  var RED_REFRESH_ICON = '<svg class="refresh-icon" width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.5 2.5v4h-4"/><path d="M2.5 13.5v-4h4"/><path d="M2.8 6a6 6 0 0 1 9.7-2.1L13.5 6"/><path d="M13.2 10a6 6 0 0 1-9.7 2.1L2.5 10"/></svg>';
   var CHECK_ICON = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="2.5 8.5 6.5 12.5 13.5 3.5"/></svg>';
-
   var COPY_ICON = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5.5" y="5.5" width="9" height="9" rx="1.8"/><path d="M10.5 2.5h-8a1 1 0 0 0-1 1v8"/></svg>';
 
-  function renderLinkChips() {
-    var area = $("linkChipsArea");
-    area.innerHTML = pendingLinks.map(function (lk, i) {
-      return '<div class="linkchip-live" data-li="' + i + '">' +
-        '<span class="ic">' + LINK_ICON + '</span>' +
-        '<input class="u url-edit" placeholder="https://…" value="' + esc(lk.url) + '" ' +
-               'aria-label="Link URL" data-li-url="' + i + '">' +
-        '<input placeholder="' + esc(domain(lk.url)) + '" value="' + esc(lk.label) + '" ' +
-               'aria-label="Link label" data-li-label="' + i + '">' +
-        '<button class="x" data-li-rm="' + i + '" title="Remove link" aria-label="Remove link">&times;</button>' +
-        '</div>';
-    }).join('');
+  var titleCache = {};
+
+  function fetchPageTitle(url) {
+    if (!url || !/^https?:/i.test(url)) return Promise.reject(new Error("Invalid URL"));
+    if (titleCache[url]) return Promise.resolve(titleCache[url]);
+
+    var controller = new AbortController();
+    var tid = setTimeout(function () { controller.abort(); }, 3500);
+
+    return fetch(url, { signal: controller.signal })
+      .then(function (r) {
+        clearTimeout(tid);
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        return r.text();
+      })
+      .then(function (html) {
+        var t = parseTitleFromHTML(html);
+        if (t) { titleCache[url] = t; return t; }
+        throw new Error("No title");
+      })
+      .catch(function () {
+        clearTimeout(tid);
+        var proxyUrl = "https://api.allorigins.win/get?url=" + encodeURIComponent(url);
+        var c2 = new AbortController();
+        var t2 = setTimeout(function () { c2.abort(); }, 4500);
+        return fetch(proxyUrl, { signal: c2.signal })
+          .then(function (r) {
+            clearTimeout(t2);
+            if (!r.ok) throw new Error("Proxy failed");
+            return r.json();
+          })
+          .then(function (d) {
+            if (d && d.contents) {
+              var t = parseTitleFromHTML(d.contents);
+              if (t) { titleCache[url] = t; return t; }
+            }
+            throw new Error("No title");
+          });
+      });
+  }
+
+  function parseTitleFromHTML(html) {
+    if (!html) return null;
+    var ogMatch = /<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)["']/i.exec(html) ||
+                  /<meta[^>]+content=["']([^"']+)["'][^>]+property=["']og:title["']/i.exec(html);
+    if (ogMatch && ogMatch[1]) return decodeHTMLEntities(ogMatch[1].trim());
+
+    var titleMatch = /<title[^>]*>([\s\S]*?)<\/title>/i.exec(html);
+    if (titleMatch && titleMatch[1]) {
+      var t = titleMatch[1].replace(/[\r\n\t]+/g, " ").trim();
+      return decodeHTMLEntities(t);
+    }
+    return null;
+  }
+
+  function decodeHTMLEntities(str) {
+    if (!str) return "";
+    var txt = document.createElement("textarea");
+    txt.innerHTML = str;
+    return txt.value;
+  }
+
+  function autoFormatAndFetchUrls(customText) {
+    var inp = $("noteInput");
+    if (!inp) return;
+    var text = customText !== undefined ? customText : inp.value;
+    if (!text) return;
+
+    var RAW_URL_RE = /(^|[^\(\]])(https?:\/\/[^\s\)]+|www\.[^\s\)]+)/gi;
+    var matches = [];
+    var m;
+
+    while ((m = RAW_URL_RE.exec(text)) !== null) {
+      var fullUrl = m[2];
+      var normUrl = /^https?:/i.test(fullUrl) ? fullUrl : "https://" + fullUrl;
+      var defaultLabel = domain(normUrl);
+      matches.push({ raw: fullUrl, normUrl: normUrl, defaultLabel: defaultLabel });
+    }
+
+    if (!matches.length) return;
+
+    matches.forEach(function (item) {
+      var md = "[" + item.defaultLabel + "](" + item.normUrl + ")";
+      text = text.replace(item.raw, md);
+    });
+
+    inp.value = text;
+    autoGrow();
     refreshSave();
-  }
 
-  function attachLink(url) {
-    var full = /^https?:/i.test(url) ? url : 'https://' + url;
-    pendingLinks.push({ url: full, label: '' });
-    renderLinkChips();
-  }
+    matches.forEach(function (item) {
+      toast("Fetching title for " + item.defaultLabel + "…");
+      fetchPageTitle(item.normUrl).then(function (retrievedTitle) {
+        if (!retrievedTitle) return;
+        if (retrievedTitle.length > 70) retrievedTitle = retrievedTitle.slice(0, 68) + "…";
 
-  function clearAllLinks() {
-    pendingLinks = [];
-    renderLinkChips();
+        var curVal = inp.value;
+        var oldMd = "[" + item.defaultLabel + "](" + item.normUrl + ")";
+        var newMd = "[" + retrievedTitle + "](" + item.normUrl + ")";
+
+        if (curVal.indexOf(oldMd) !== -1) {
+          inp.value = curVal.replace(oldMd, newMd);
+          autoGrow();
+          refreshSave();
+          toast("Fetched title: “" + retrievedTitle + "”");
+        }
+      }).catch(function () {});
+    });
   }
 
   function refreshSave() {
-    $("saveBtn").disabled = !$("noteInput").value.trim() && !pendingLinks.length;
+    $("saveBtn").disabled = !$("noteInput").value.trim();
   }
-
-  var URL_RE = /(https?:\/\/[^\s]+|www\.[^\s]+)/i;
-
-  function scanForUrl() {
-    var v = $("noteInput").value;
-    var m = URL_RE.exec(v);
-    if (!m) return;
-    $("noteInput").value = v.replace(URL_RE, "").replace(/\s{2,}/g, " ").trim();
-    var wasFirst = pendingLinks.length === 0;
-    attachLink(m[1]);
-    toast(wasFirst ? "Link attached — " + domain(m[1]) + " · label or save" : "Another link added");
-  }
-
-  // delegate events on dynamically rendered chips
-  $("linkChipsArea").addEventListener("input", function (e) {
-    var li = e.target.getAttribute("data-li-label");
-    if (li !== null && pendingLinks[+li]) pendingLinks[+li].label = e.target.value.trim();
-    var lu = e.target.getAttribute("data-li-url");
-    if (lu !== null && pendingLinks[+lu]) {
-      pendingLinks[+lu].url = e.target.value.trim() || pendingLinks[+lu].url;
-      // update the label placeholder to match new domain
-      var chip = e.target.closest("[data-li]");
-      var labelInput = chip && chip.querySelector("[data-li-label]");
-      if (labelInput) labelInput.placeholder = domain(pendingLinks[+lu].url);
-    }
-  });
-  $("linkChipsArea").addEventListener("keydown", function (e) {
-    if (e.key === "Enter") { e.preventDefault(); save(); }
-    if (e.key === "Escape") { e.preventDefault(); input.focus(); }
-  });
-  $("linkChipsArea").addEventListener("click", function (e) {
-    var rm = e.target.closest("[data-li-rm]");
-    if (!rm) return;
-    var idx = parseInt(rm.getAttribute("data-li-rm"), 10);
-    var removed = pendingLinks.splice(idx, 1)[0];
-    renderLinkChips();
-    if (removed) {
-      var v = input.value;
-      input.value = (v ? v.replace(/\s+$/, "") + " " : "") + removed.url;
-      autoGrow();
-    }
-    input.focus();
-  });
 
   var input = $("noteInput");
 
   input.addEventListener("paste", function (e) {
     var txt = (e.clipboardData || window.clipboardData).getData("text") || "";
-    var m = URL_RE.exec(txt.trim());
-    if (!m) return;
-    e.preventDefault();
-    var rest = txt.replace(URL_RE, "").replace(/\s{2,}/g, " ").trim();
-    if (rest) {
-      var v = input.value;
-      input.value = (v ? v.replace(/\s+$/, "") + " " : "") + rest;
+    if (/(https?:\/\/[^\s]+|www\.[^\s]+)/i.test(txt)) {
+      e.preventDefault();
+      var start = input.selectionStart || input.value.length;
+      var end = input.selectionEnd || input.value.length;
+      var current = input.value;
+      var updated = current.slice(0, start) + txt + current.slice(end);
+      input.value = updated;
+      try { input.setSelectionRange(start + txt.length, start + txt.length); } catch (err) {}
+      autoFormatAndFetchUrls();
     }
-    var wasFirst = pendingLinks.length === 0;
-    attachLink(m[1]);
-    autoGrow();
-    toast(wasFirst ? "Link attached — " + domain(m[1]) : "Link added " + (pendingLinks.length) + " total");
   });
 
-  input.addEventListener("input", function () { refreshSave(); scanForUrl(); });
+  input.addEventListener("input", function () { refreshSave(); });
 
   /* ---------------- Save Note ---------------- */
   function save() {
-    var v = input.value.trim();
-    if (!v && !pendingLinks.length) return;
-    var links = pendingLinks.map(function (lk) { return { url: lk.url, label: lk.label || domain(lk.url) }; });
-    var body = v || (links.length ? links[0].label : "");
+    var body = input.value.trim();
+    if (!body) return;
 
     if (editingId) {
       notes.forEach(function (x) {
         if (x.id === editingId) {
-          x.body = body; x.links = links;
+          x.body = body;
           x.updatedAt = new Date().toISOString();
         }
       });
@@ -1645,12 +1714,11 @@
       return;
     }
 
-    var newId = "n" + (++uid);
+    var newId = generateUniqueId();
     notes.push({
       id: newId,
       projectId: currentProject.id,
       body: body,
-      links: links,
       highlight: false,
       createdAt: new Date(),
       source: "type",
@@ -1659,7 +1727,6 @@
     flagJustSaved(newId);
     settings.lastProjectId = currentProject.id;
     input.value = "";
-    clearAllLinks();
     autoGrow();
     var box = $("captureBox");
     box.classList.add("saved");
@@ -3042,6 +3109,7 @@
     }
 
     function finishBoot() {
+      deduplicateNoteIds();
       if (settings.lastProjectId) {
         var lp = projects.filter(function (p) { return p.id === settings.lastProjectId && !p.archived; })[0];
         if (lp) currentProject = lp;
