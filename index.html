@@ -29,6 +29,9 @@
 <link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="icons/favicon-16.png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Inter:wght@100..900&display=swap" rel="stylesheet">
 <meta name="theme-color" content="#b4491f">
 
 <style>
@@ -125,7 +128,7 @@
   * { box-sizing: border-box; }
   body {
     margin: 0; background: var(--bg); color: var(--ink);
-    font: 15px/1.55 ui-sans-serif, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font: 15px/1.55 "Geist", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     -webkit-font-smoothing: antialiased;
   }
   .wrap { max-width: 780px; margin: 0 auto; padding: 26px 20px 70px; }
@@ -169,6 +172,15 @@
   .gear:hover { color: var(--accent); border-color: var(--accent); }
   .gear:hover svg { transform: rotate(45deg); transition: transform .25s; }
   .gear:active { transform: scale(.95); }
+
+  .capdate-bar {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 12px; font-weight: 500; color: var(--muted);
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 20px; padding: 4px 12px; margin-bottom: 12px;
+  }
+  .capdate-bar .icon { color: var(--accent); flex: 0 0 auto; }
+  .projhead-range { font-size: 12px; font-weight: 400; color: var(--faint); font-variant-numeric: tabular-nums; }
 
   /* ---- project tiles ---- */
   .tiles { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 10px; }
@@ -314,17 +326,17 @@
   kbd { font: inherit; font-size: 10.5px; border: 1px solid var(--line); border-bottom-width: 2px; border-radius: 4px; padding: 0 4px; color: var(--muted); background: var(--panel); }
 
   /* ---- week header ---- */
-  .weekhead { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; }
+  .weekhead { display: flex; align-items: center; justify-content: space-between; gap: 10px; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; flex-wrap: nowrap; }
   .weekhead.past { background: var(--past); border-style: dashed; }
-  .whleft { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-  .whleft button, .thisweek, select.weekselect { height: 28px; border: 1px solid var(--line); background: var(--panel); color: var(--muted); border-radius: 7px; cursor: pointer; font: inherit; font-size: 13px; padding: 0 8px; outline: none; }
+  .whleft { display: flex; align-items: center; gap: 8px; flex: 1 1 auto; min-width: 0; }
+  .whleft button, .thisweek, select.weekselect { height: 28px; border: 1px solid var(--line); background: var(--panel); color: var(--muted); border-radius: 7px; cursor: pointer; font: inherit; font-size: 13px; padding: 0 8px; outline: none; flex: 0 0 auto; white-space: nowrap; }
   .whleft button:hover:not(:disabled), .thisweek:hover, select.weekselect:hover { color: var(--ink); border-color: var(--faint); }
   .whleft button:disabled { opacity: .3; cursor: default; }
-  .weeklabel { font-size: 13.5px; min-width: 190px; text-align: center; font-variant-numeric: tabular-nums; font-weight: 500; }
-  .thisweek { display: none; background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 500; }
-  .thisweek.show { display: inline-block; }
-  .robadge { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; display: none; font-weight: 600; }
-  .robadge.show { display: inline; }
+  .weeklabel { font-size: 13px; text-align: center; font-variant-numeric: tabular-nums; font-weight: 500; white-space: nowrap; flex: 0 0 auto; }
+  .thisweek { display: none; background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 500; flex: 0 0 auto; white-space: nowrap; margin-left: auto; }
+  .thisweek.show { display: inline-flex; align-items: center; gap: 4px; }
+  .robadge { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .07em; display: none; font-weight: 600; white-space: nowrap; flex: 0 0 auto; }
+  .robadge.show { display: inline-block; }
 
   /* ---- lists ---- */
   h2.sec { font-size: 11px; text-transform: uppercase; letter-spacing: .09em; color: var(--faint); margin: 28px 0 10px; font-weight: 600; display: flex; align-items: center; gap: 7px; }
@@ -407,10 +419,16 @@
     text-transform: uppercase; letter-spacing: .09em; font-weight: 600; color: var(--faint);
   }
   .sumsec.overview .secbody { font-size: 13.5px; }
+  .arch-notice {
+    font-size: 12px; color: var(--muted); background: var(--panel);
+    border: 1px dashed var(--line); border-radius: 7px;
+    padding: 6px 10px; margin-top: 10px; display: inline-flex; align-items: center; gap: 6px;
+  }
 
   /* AI buttons carry the sparkle and go quietly loud when a refresh is due. */
-  .minibtn.aibtn { display: inline-flex; align-items: center; gap: 3px; white-space: nowrap; }
+  .minibtn.aibtn { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
   .minibtn.aibtn.wants { color: var(--accent); border-color: var(--accent); }
+  .refresh-icon { display: inline-block; vertical-align: middle; flex: 0 0 auto; }
   /* Square icon-only button, sized to match the AI button beside it. */
   .minibtn.iconbtn-sm {
     display: inline-flex; align-items: center; justify-content: center;
@@ -595,6 +613,7 @@
 
   <!-- ================= CAPTURE ================= -->
   <div id="captureView" role="tabpanel" aria-labelledby="mCapture">
+    <div class="capdate-bar" id="capDateBar"></div>
     <div class="tiles" id="tiles" aria-label="Project selection"></div>
     <input id="newProjInput" placeholder="Project name…" spellcheck="false" aria-label="New project name">
 
@@ -875,6 +894,15 @@
     var e = new Date(s.getTime() + 6 * 24 * 3600 * 1000);
     return "Week of " + MON[s.getMonth()] + " " + s.getDate() + " – " + MON[e.getMonth()] + " " + e.getDate() + ", " + e.getFullYear();
   }
+  function fmtFullRange(off) {
+    off = off || 0;
+    var s = new Date(thisWeek.getTime() + off * WEEK_MS);
+    var e = new Date(s.getTime() + 6 * 24 * 3600 * 1000);
+    var sDay = DAY[(s.getDay() + 6) % 7];
+    var eDay = DAY[(e.getDay() + 6) % 7];
+    return sDay + " " + MON[s.getMonth()] + " " + s.getDate() + " – " +
+           eDay + " " + MON[e.getMonth()] + " " + e.getDate() + ", " + e.getFullYear();
+  }
   function dayLabel(d) {
     var dt = new Date(d);
     return DAY[(dt.getDay() + 6) % 7];
@@ -889,22 +917,15 @@
     return projects[0] || { id: "p0", name: "General", color: "#b4491f" };
   }
   function offsetOf(d) {
-    var dateObj = new Date(d);
-    return Math.round((startOfWeek(dateObj, settings.weekStartsOn).getTime() - thisWeek.getTime()) / WEEK_MS);
+    if (!d) return -9999;
+    var dateObj = d instanceof Date ? d : new Date(d);
+    if (isNaN(dateObj.getTime())) return -9999;
+    var noteWeek = startOfWeek(dateObj, settings.weekStartsOn);
+    var curWeek = startOfWeek(thisWeek, settings.weekStartsOn);
+    return Math.round((noteWeek.getTime() - curWeek.getTime()) / WEEK_MS);
   }
   function weekNotes(off) {
     return notes.filter(function (x) {
-      if (x.weekKey) {
-        var parts = x.weekKey.split("-W");
-        if (parts.length === 2) {
-          // compare against current derived weekKey for offset
-          var targetDate = new Date(thisWeek.getTime() + off * WEEK_MS);
-          var year = targetDate.getFullYear();
-          var weekNum = getWeekNumber(targetDate);
-          var key = year + "-W" + (weekNum < 10 ? "0" + weekNum : weekNum);
-          return x.weekKey === key;
-        }
-      }
       return offsetOf(x.createdAt) === off;
     });
   }
@@ -1056,7 +1077,7 @@
     opts = opts || {};
     if (!doc || !doc.notes || !doc.projects) throw new Error("Not an It Happened This Week data file");
     projects = doc.projects.map(function (p, idx) {
-      return { id: p.id, name: p.name, color: p.color, archived: !!p.archived, sortOrder: p.sortOrder !== undefined ? p.sortOrder : idx };
+      return { id: p.id, name: p.name, color: p.color, archived: !!p.archived, archivedAt: p.archivedAt || null, sortOrder: p.sortOrder !== undefined ? p.sortOrder : idx };
     });
     notes = doc.notes.map(function (x) {
       // Older files (and the old IndexedDB shape) stored a single `link`
@@ -1323,7 +1344,15 @@
       '<g stroke="currentColor" stroke-width="' + T_W + '" stroke-linecap="round">' + marks + '</g></svg></span>';
   }
 
+  function updateCaptureDateBar() {
+    var bar = $("capDateBar");
+    if (!bar) return;
+    bar.innerHTML = '<svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="icon"><rect x="2" y="3.5" width="12" height="11" rx="2"/><line x1="2" y1="7" x2="14" y2="7"/><line x1="5" y1="2" x2="5" y2="4"/><line x1="11" y1="2" x2="11" y2="4"/></svg>' +
+      '<span>' + fmtFullRange(0) + '</span>';
+  }
+
   function renderTiles() {
+    updateCaptureDateBar();
     var ml = modLabel();
     var list = activeProjects();
     var html = list.map(function (p, i) {
@@ -1389,6 +1418,7 @@
 
   function renderProjectNotes() {
     if (!currentProject) { $("projList").innerHTML = ""; return; }
+    updateCaptureDateBar();
     // Oldest first — the list reads as the week accumulating, and a new note
     // lands at the bottom where you just left the cursor rather than pushing
     // everything else down.
@@ -1397,7 +1427,7 @@
       .sort(function (a, b) { return new Date(a.createdAt) - new Date(b.createdAt); });
 
     // Tally rather than a digit, matching the project tiles and the app icon.
-    $("projHead").innerHTML = esc(currentProject.name) + " · this week" +
+    $("projHead").innerHTML = esc(currentProject.name) + ' <span class="projhead-range">(' + fmtFullRange(0) + ')</span>' +
       (list.length ? ' <span class="headtally">' + tallyMark(list.length) + "</span>" : "");
 
     if (!list.length) {
@@ -1490,6 +1520,11 @@
   var AI_ICON = '<svg class="aiglyph" width="13" height="13" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">' +
     '<path d="M8 0.6l1.5 4.2 4.2 1.5-4.2 1.5L8 12l-1.5-4.2L2.3 6.3l4.2-1.5z"/>' +
     '<path d="M13 9.6l.7 1.9 1.9.7-1.9.7-.7 1.9-.7-1.9-1.9-.7 1.9-.7z" opacity=".65"/></svg>';
+
+  // Circular double-arrow refresh icon for buttons needing generation or refresh.
+  var RED_REFRESH_ICON = '<svg class="refresh-icon" width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+    '<path d="M13.5 2.5v4h-4"/><path d="M2.5 13.5v-4h4"/><path d="M2.8 6a6 6 0 0 1 9.7-2.1L13.5 6"/><path d="M13.2 10a6 6 0 0 1-9.7 2.1L2.5 10"/>' +
+  '</svg>';
 
   var CHECK_ICON = '<svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="2.5 8.5 6.5 12.5 13.5 3.5"/></svg>';
 
@@ -1850,11 +1885,11 @@
     var label, cls, disabled = "";
 
     if (st.generated === 0) {
-      label = AI_ICON + " AI Generate";
-      cls = "btn primary";
+      label = RED_REFRESH_ICON + AI_ICON + " AI Generate All";
+      cls = "btn primary wants-gen";
     } else if (pending > 0) {
-      label = AI_ICON + " AI Refresh <span class='cntpill'>" + pending + "</span>";
-      cls = "btn primary";
+      label = RED_REFRESH_ICON + AI_ICON + " AI Refresh All <span class='cntpill'>" + pending + "</span>";
+      cls = "btn primary wants-gen";
     } else {
       label = CHECK_ICON + " AI up to date";
       cls = "btn";
@@ -1914,6 +1949,12 @@
     renderWeek();
   });
 
+  function archivedProjectsInWeek(off) {
+    return projects.filter(function (p) {
+      return p.archivedAt && offsetOf(p.archivedAt) === off;
+    });
+  }
+
   function buildMarkdown(off) {
     var list = weekNotes(off);
     var out = "## " + fmtRange(off) + "\n";
@@ -1930,6 +1971,13 @@
                (x.link ? " — [" + (x.link.label || domain(x.link.url)) + "](" + x.link.url + ")" : "") + "\n";
       });
     });
+    var arch = archivedProjectsInWeek(off);
+    if (arch.length) {
+      out += "\n### Archived Projects\n";
+      arch.forEach(function (p) {
+        out += "- " + p.name + " (archived during this week)\n";
+      });
+    }
     return out.trimEnd();
   }
 
@@ -1969,8 +2017,8 @@
   function noteSig(x) {
     var lks = x.links && x.links.length ? x.links : (x.link ? [x.link] : []);
     return hashStr(
-      x.body + "" +
-      (x.highlight ? "1" : "0") + "" +
+      x.body + " " +
+      (x.highlight ? "1" : "0") + " " +
       lks.map(function (l) { return (l.label || "") + "|" + l.url; }).join(",")
     );
   }
@@ -1994,13 +2042,14 @@
   }
 
   function fpOfSigs(sigs) {
-    return hashStr(Object.keys(sigs).sort().map(function (k) { return k + ":" + sigs[k]; }).join(""));
+    return hashStr(Object.keys(sigs).sort().map(function (k) { return k + ":" + sigs[k]; }).join(" "));
   }
 
   function overviewFp(off) {
+    var archStr = archivedProjectsInWeek(off).map(function (p) { return p.id + ":" + p.archivedAt; }).join(",");
     return hashStr(projectsInWeek(off).map(function (p) {
       return p.id + "=" + p.name + "=" + fpOfSigs(sigsFor(off, p.id));
-    }).join(""));
+    }).join(" ") + "|arch:" + archStr);
   }
 
   function weekSummary(off) {
@@ -2098,19 +2147,32 @@
       return "## " + p.name + "\n" + notesBlock(off, p.id);
     }).join("\n\n");
 
+    var arch = archivedProjectsInWeek(off);
+    var archNotice = arch.length
+      ? "\nArchived projects: The following project(s) were archived during this week: " + arch.map(function (p) { return p.name; }).join(", ") + "."
+      : "";
+
+    var archRule = arch.length
+      ? "- Mention in the overall summary that " + arch.map(function (p) { return p.name; }).join(", ") + " " + (arch.length === 1 ? "was" : "were") + " archived during this week."
+      : "";
+
+    var rules = sharedRules().concat([
+      "- Start with one or two sentences characterising the week across all projects.",
+      "- Then a markdown bullet list of the one to three most significant items of the week.",
+      "- Choose them on substance: things shipped, closed, decided or unblocked outrank things merely worked on. Notes marked ★ are ones I flagged as important and should be strongly preferred.",
+      "- Fewer than three is correct if only one or two things genuinely mattered. Do not pad to reach three.",
+      "- Each bullet is one line, and names the project it belongs to.",
+      "- Do not summarise every project — the per-project sections below already do that."
+    ]);
+    if (archRule) rules.push(archRule);
+
     return [
       "These are all the notes I logged during one work week, grouped by project.",
       "Write a short overview of the whole week — this sits at the top of a status report, above the per-project detail.",
+      archNotice,
       "",
       "Rules:",
-      sharedRules().concat([
-        "- Start with one or two sentences characterising the week across all projects.",
-        "- Then a markdown bullet list of the one to three most significant items of the week.",
-        "- Choose them on substance: things shipped, closed, decided or unblocked outrank things merely worked on. Notes marked ★ are ones I flagged as important and should be strongly preferred.",
-        "- Fewer than three is correct if only one or two things genuinely mattered. Do not pad to reach three.",
-        "- Each bullet is one line, and names the project it belongs to.",
-        "- Do not summarise every project — the per-project sections below already do that."
-      ]).join("\n"),
+      rules.join("\n"),
       "",
       "The notes:",
       "",
@@ -2324,15 +2386,15 @@
       ? '<span class="dot" style="background:' + (p ? p.color : "var(--faint)") + '"></span><b>' + esc(p ? p.name : "Project") + "</b>"
       : '<span class="ovlabel">' + AI_ICON + " Week overview</span>";
 
-    // "AI Generate" / "AI Refresh" rather than bare verbs: these are the only
-    // controls in the app that cost money and take seconds, and they should not
-    // read like the local, instant ones.
+    var needsRefresh = st.status !== "fresh";
+    var iconLead = needsRefresh ? RED_REFRESH_ICON + AI_ICON : AI_ICON;
+
     var btnLabel = busy ? '<span class="spin">' + AI_ICON + "</span> Working…"
-                        : AI_ICON + " AI " + (st.status === "none" ? "Generate" : "Refresh");
+                        : iconLead + " AI " + (st.status === "none" ? "Generate" : "Refresh");
 
     return title + stateBadge(st) + when +
       '<span class="secspacer"></span>' +
-      '<button class="minibtn aibtn' + (st.status === "stale" ? " wants" : "") + '" data-gen="' +
+      '<button class="minibtn aibtn' + (needsRefresh ? " wants" : "") + '" data-gen="' +
       (pid || "") + '"' + (busy ? " disabled" : "") + ">" + btnLabel + "</button>" +
       '<button class="minibtn iconbtn-sm" data-copysec="' + (pid || "overview") + '" ' +
       'title="Copy just this section" aria-label="Copy this section">' + COPY_ICON + "</button>";
@@ -2353,18 +2415,23 @@
     if (head) head.innerHTML = sectionHeadInner(off, pid);
     if (!body) return;
 
+    var arch = !pid ? archivedProjectsInWeek(off) : [];
+    var archHtml = arch.length
+      ? '<div class="arch-notice">📦 Archived this week: ' + arch.map(function (p) { return '<b>' + esc(p.name) + '</b>'; }).join(', ') + '</div>'
+      : '';
+
     if (busySections[id]) {
-      body.innerHTML = '<span class="placeholder">Asking ' + esc(settings.model) + "…</span>";
+      body.innerHTML = '<span class="placeholder">Asking ' + esc(settings.model) + "…</span>" + archHtml;
       return;
     }
     var sec = pid ? weekSummary(off).projects[pid] : weekSummary(off).overview;
     if (sec && sec.text) {
-      body.innerHTML = mdToHtml(sec.text);
+      body.innerHTML = mdToHtml(sec.text) + archHtml;
     } else {
       body.innerHTML = '<span class="placeholder">' +
         (pid ? "No AI summary yet — the notes below are the record either way."
              : "No AI overview yet. Optional; the per-project sections carry the detail.") +
-        "</span>";
+        "</span>" + archHtml;
     }
   }
 
@@ -2854,11 +2921,18 @@
     if (ar) {
       var pa = proj(ar.getAttribute("data-arch"));
       pa.archived = !pa.archived;
+      if (pa.archived) {
+        pa.archivedAt = new Date().toISOString();
+      } else {
+        delete pa.archivedAt;
+      }
       if (pa.archived && currentProject && currentProject.id === pa.id) {
         var first = activeProjects()[0];
         if (first) currentProject = first;
       }
-      renderTiles(); persist(); openSettings("projects");
+      renderTiles();
+      if (mode === "summarize") renderWeek();
+      persist(); openSettings("projects");
       toast(pa.archived ? "Archived " + pa.name : "Restored " + pa.name);
       return;
     }
